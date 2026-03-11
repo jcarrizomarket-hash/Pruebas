@@ -1,0 +1,6 @@
+# Configuración de Build para Vercel
+Build Command: npm run build
+Output Directory: dist
+Install Command: npm install
+Framework: vite
+Node Version: 18.x

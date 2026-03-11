@@ -1,0 +1,41 @@
+{
+  "name": "gestion-servicios",
+  "version": "2.6.2",
+  "description": "Sistema de Gestión de Camareros y Servicios con Supabase",
+  "type": "module",
+  "private": true,
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "deploy": "bash deploy.sh",
+    "deploy:win": "deploy.bat",
+    "deploy:supabase": "supabase functions deploy make-server-ce05fe95 --no-verify-jwt",
+    "deploy:vercel": "vercel --prod",
+    "link:supabase": "supabase link --project-ref eubjevjqcpsvpgxmdpvy",
+    "check": "bash pre-deploy-check.sh",
+    "setup": "npm install && cp .env.example .env && echo '✅ Setup completo! Edita .env con tus credenciales'",
+    "logs:supabase": "supabase functions logs make-server-ce05fe95",
+    "test:api": "curl https://eubjevjqcpsvpgxmdpvy.supabase.co/functions/v1/make-server-ce05fe95/test"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "lucide-react": "^0.462.0",
+    "react-router": "^7.1.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.4",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.49",
+    "tailwindcss": "^4.0.0",
+    "typescript": "~5.6.2",
+    "vite": "^6.0.3"
+  }
+}
