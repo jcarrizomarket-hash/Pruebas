@@ -66,6 +66,17 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "vite build"
-  }
-}
+    "build": "vite build",
+    "build:vite": "vite build",
+    "build:vercel": "bash build-vercel.sh",
+    "preview": "vite preview",
+    "deploy": "bash deploy.sh",
+    "deploy:win": "deploy.bat",
+    "deploy:supabase": "supabase functions deploy make-server-ce05fe95 --no-verify-jwt",
+    "deploy:vercel": "vercel --prod",
+    "link:supabase": "supabase link --project-ref eubjevjqcpsvpgxmdpvy",
+    "check": "bash pre-deploy-check.sh",
+    "setup": "npm install && cp .env.example .env && echo '✅ Setup completo! Edita .env con tus credenciales'",
+    "logs:supabase": "supabase functions logs make-server-ce05fe95",
+    "test:api": "curl https://eubjevjqcpsvpgxmdpvy.supabase.co/functions/v1/make-server-ce05fe95/test"
+  },
