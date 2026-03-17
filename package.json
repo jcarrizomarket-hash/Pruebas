@@ -23,23 +23,23 @@
     "test:api": "curl https://eubjevjqcpsvpgxmdpvy.supabase.co/functions/v1/make-server-ce05fe95/test"
   },
   "dependencies": {
+    "@tailwindcss/postcss": "^4.2.1",
+    "autoprefixer": "^10.4.20",
     "jspdf": "^4.2.0",
     "jspdf-autotable": "^5.0.7",
     "lucide-react": "^0.462.0",
+    "postcss": "^8.4.49",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router": "^7.1.1",
+    "tailwindcss": "^4.0.0",
     "xlsx": "^0.18.5"
-  },
+},
   "devDependencies": {
-    "@tailwindcss/postcss": "^4.2.1",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^4.3.4",
-    "autoprefixer": "^10.4.20",
-    "postcss": "^8.4.49",
-    "tailwindcss": "^4.0.0",
     "typescript": "~5.6.2",
     "vite": "^6.0.3"
-  }
+}
 }
