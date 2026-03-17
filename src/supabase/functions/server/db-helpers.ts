@@ -1,9 +1,10 @@
-/**
+//**
  * Funciones Helper para interactuar con las tablas de Supabase
  * Reemplaza el sistema KV Store con queries SQL directas
  */
 
 import { SupabaseClient } from 'npm:@supabase/supabase-js@2.39.3';
+import * as bcrypt from 'https://deno.land/x/bcrypt@v0.4.1/mod.ts';
 
 // ============== GENERACIÓN DE CÓDIGOS CORRELATIVOS ==============
 
@@ -383,12 +384,17 @@ export async function obtenerUsuarios(supabase: SupabaseClient) {
 }
 
 export async function crearUsuario(supabase: SupabaseClient, datos: any) {
+  const rawPassword = datos.password || datos.password_hash;
+  if (!rawPassword) throw new Error('Se requiere una contraseña para crear el usuario.');
+
+  const passwordHash = await bcrypt.hash(rawPassword);
+
   const { data, error } = await supabase
     .from('usuarios')
     .insert({
       nombre: datos.nombre,
       email: datos.email,
-      password_hash: datos.password || datos.password_hash, // Nota: En producción usar bcrypt
+      password_hash: passwordHash,
       rol: datos.rol,
       camarero_codigo: datos.camarero_codigo || datos.camareroCodigo || null
     })
