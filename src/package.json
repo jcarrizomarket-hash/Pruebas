@@ -23,9 +23,10 @@
     "test:api": "curl https://eubjevjqcpsvpgxmdpvy.supabase.co/functions/v1/make-server-ce05fe95/test"
   },
   "dependencies": {
+    "@tailwindcss/postcss": "^4.2.1",
+    "lucide-react": "^0.462.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "lucide-react": "^0.462.0",
     "react-router": "^7.1.1"
   },
   "devDependencies": {

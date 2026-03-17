@@ -1,8 +1,7 @@
 {
-  "version": 2,
-  "buildCommand": "cd src && npm install && npm run build",
+  "installCommand": "cd src && npm install",
+  "buildCommand": "cd src && npm run build",
   "outputDirectory": "src/dist",
-  "installCommand": "echo 'install handled in buildCommand'",
   "rewrites": [
     {
       "source": "/(.*)",
