@@ -3,8 +3,6 @@ import { Plus, Edit2, Trash2, Building2 } from 'lucide-react';
 
 const fnSecret = typeof import.meta !== 'undefined' ? (import.meta.env?.VITE_FN_SECRET || '') : '';
 
-export function Clientes({
-
 export function Clientes({ clientes, setClientes, baseUrl, publicAnonKey, cargarDatos }) {
   const [showForm, setShowForm] = useState(false);
   const [editandoClienteId, setEditandoClienteId] = useState(null);
