@@ -109,6 +109,7 @@ export default function App() {
   const handleLogout = () => {
     localStorage.removeItem('authenticated');
     localStorage.removeItem('user');
+    localStorage.removeItem('session_expires_at');
     setIsAuthenticated(false);
     setCurrentUser(null);
   };
