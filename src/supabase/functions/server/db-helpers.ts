@@ -306,14 +306,26 @@ export async function eliminarPedido(supabase: SupabaseClient, id: string) {
   return true;
 }
 
-export async function obtenerPedidoPorId(supabase: SupabaseClient, id: string) {
+export async function crearCliente(supabase: SupabaseClient, datos: any) {
+  const codigo = await generarSiguienteCodigo(supabase, 'clientes', 'CLI');
+
   const { data, error } = await supabase
-    .from('pedidos')
-    .select('*')
-    .eq('id', id)
+    .from('clientes')
+    .insert({
+      codigo,
+      nombre: datos.nombre,
+      contacto1: datos.contacto1 || '',
+      contacto2: datos.contacto2 || '',
+      mail1: datos.mail1 || '',
+      mail2: datos.mail2 || '',
+      telefono1: datos.telefono1 || '',
+      telefono2: datos.telefono2 || '',
+      notas: datos.notas || ''
+    })
+    .select()
     .single();
 
-  if (error && error.code !== 'PGRST116') throw error;
+  if (error) throw error;
   return data;
 }
 
