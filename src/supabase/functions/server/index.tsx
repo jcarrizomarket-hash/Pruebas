@@ -3000,7 +3000,7 @@ app.post('/usuarios', async (c) => {
 });
 
 // Login
-app.post('/login', async (c) => {
+app.post('/usuarios', requireSecret, async (c) => {
   try {
     const { email, password } = await c.req.json();
     
