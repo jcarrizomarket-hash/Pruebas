@@ -204,7 +204,7 @@ app.post('/pedidos', requireSecret, async (c) => {
   }
 });
 
-app.put('/pedidos/:id', async (c) => {
+app.put('/pedidos/:id', requireSecret, async (c) => {
   try {
     const id = c.req.param('id');
     const datos = await c.req.json();
@@ -219,7 +219,7 @@ app.put('/pedidos/:id', async (c) => {
   }
 });
 
-app.delete('/pedidos/:id', async (c) => {
+app.delete('/pedidos/:id', requireSecret, async (c) => {
   try {
     const id = c.req.param('id');
     console.log(`Ô£ø√º√≥√´√î‚àè√® Intentando eliminar pedido con ID: ${id}`);
@@ -3298,4 +3298,3 @@ app.get('/registros-perfil', async (c) => {
 Deno.serve(app.fetch);
 
 // Trigger redeploy - 2026-03-10 - Migration to SQL complete
-
