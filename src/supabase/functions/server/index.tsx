@@ -8,7 +8,14 @@ import * as db from './db-helpers.ts';
 
 const app = new Hono().basePath('/make-server-ce05fe95');
 
-app.use('*', cors());
+app.use('*', cors({
+  origin: [
+    'https://pruebas-h3ty04sw5-eukosgestion.vercel.app',
+    'https://gestiondeservicios.jcarrizo.com'
+  ],
+  allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowHeaders: ['Content-Type', 'Authorization', 'x-fn-secret'],
+}));
 app.use('*', logger(console.log));
 
 // Middleware de seguridad simple
