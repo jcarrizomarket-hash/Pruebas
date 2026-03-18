@@ -67,7 +67,7 @@ fi
 
 # Desplegar la función
 echo "Desplegando make-server-ce05fe95..."
-supabase functions deploy make-server-ce05fe95 --no-verify-jwt
+supabase functions deploy make-server-ce05fe95
 
 echo -e "${GREEN}✅ Edge Function desplegada exitosamente${NC}"
 echo ""

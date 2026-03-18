@@ -14,7 +14,7 @@
     "preview": "vite preview",
     "deploy": "bash deploy.sh",
     "deploy:win": "deploy.bat",
-    "deploy:supabase": "supabase functions deploy make-server-ce05fe95 --no-verify-jwt",
+    "deploy:supabase": "supabase functions deploy make-server-ce05fe95",
     "deploy:vercel": "vercel --prod",
     "link:supabase": "supabase link --project-ref eubjevjqcpsvpgxmdpvy",
     "check": "bash pre-deploy-check.sh",
