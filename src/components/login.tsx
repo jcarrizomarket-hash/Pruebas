@@ -16,44 +16,8 @@ export function Login({ onLogin, baseUrl, publicAnonKey }: LoginProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [setupMessage, setSetupMessage] = useState('');
 
-  const createAdminUser = async () => {
-    try {
-      setLoading(true);
-      setError('');
-      setSetupMessage('');
 
-      const response = await fetch(`${baseUrl}/usuarios`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${publicAnonKey}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          email: 'admin@ejemplo.com',
-          nombre: 'Administrador',
-          rol: 'admin',
-          password: 'admin123'
-        })
-      });
-
-      const result = await response.json();
-
-      if (result.success) {
-        setSetupMessage('✅ Usuario admin creado exitosamente. Usa: admin@ejemplo.com / admin123');
-        setEmail('admin@ejemplo.com');
-        setPassword('admin123');
-      } else {
-        setError(result.error || 'Error al crear usuario admin');
-      }
-    } catch (error) {
-      console.error('Error al crear admin:', error);
-      setError('Error al conectar con el servidor');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -79,9 +43,11 @@ export function Login({ onLogin, baseUrl, publicAnonKey }: LoginProps) {
       const result = await response.json();
 
       if (result.success && result.user) {
-        // Guardar sesión
+        // Guardar sesión con timestamp de expiración (8 horas)
+        const expiresAt = Date.now() + 8 * 60 * 60 * 1000;
         localStorage.setItem('authenticated', 'true');
         localStorage.setItem('user', JSON.stringify(result.user));
+        localStorage.setItem('session_expires_at', String(expiresAt));
         onLogin(result.user);
       } else {
         setError(result.error || 'Credenciales incorrectas');
@@ -166,29 +132,10 @@ export function Login({ onLogin, baseUrl, publicAnonKey }: LoginProps) {
             </div>
           )}
 
-          {setupMessage && (
-            <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg text-sm">
-              {setupMessage}
-            </div>
-          )}
-
           <Button type="submit" className="w-full" size="lg" disabled={loading}>
             {loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
           </Button>
         </form>
-
-        {/* Botón rápido para crear admin */}
-        <div className="mt-4">
-          <Button
-            type="button"
-            onClick={createAdminUser}
-            variant="outline"
-            className="w-full"
-            disabled={loading}
-          >
-            🚀 Crear Usuario Admin (Primera vez)
-          </Button>
-        </div>
       </div>
     </div>
   );
