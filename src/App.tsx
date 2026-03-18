@@ -86,10 +86,16 @@ export default function App() {
   };
 
   useEffect(() => {
-    // Verificar si ya está autenticado
     const auth = localStorage.getItem('authenticated');
     const userStr = localStorage.getItem('user');
+    const expiresAt = localStorage.getItem('session_expires_at');
     if (auth === 'true' && userStr) {
+      if (expiresAt && Date.now() > parseInt(expiresAt)) {
+        localStorage.removeItem('authenticated');
+        localStorage.removeItem('user');
+        localStorage.removeItem('session_expires_at');
+        return;
+      }
       setIsAuthenticated(true);
       setCurrentUser(JSON.parse(userStr));
     }
