@@ -2987,27 +2987,6 @@ app.get('/usuarios', async (c) => {
 });
 
 // Crear nuevo usuario
-app.post('/usuarios', async (c) => {
-  try {
-    const datos = await c.req.json();
-    const usuario = await db.crearUsuario(supabase, datos);
-    console.log('‚úÖ Usuario creado:', usuario.email, '-', usuario.rol);
-    return c.json({ success: true, data: usuario });
-  } catch (error) {
-    console.error('‚ùå Error al crear usuario:', error);
-    return c.json({ success: false, error: String(error) }, 500);
-  }
-});
-
-// Login
-app.post('/usuarios', requireSecret, async (c) => {
-  try {
-    const { email, password } = await c.req.json();
-    
-    if (!email || !password) {
-      return c.json({ success: false, error: 'Email y contrase√±a son requeridos' }, 400);
-    }
-
     const usuario = await db.obtenerUsuarioPorEmail(supabase, email);
     
     if (!usuario) {
