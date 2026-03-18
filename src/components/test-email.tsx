@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Send, Mail, CheckCircle, XCircle, Loader2 } from 'lucide-react';
 import { EmailConfigStatus } from './email-config-status';
+import { getReadHeaders, getWriteHeaders } from '../utils/api-headers';
 
 interface TestEmailProps {
   baseUrl: string;
@@ -25,7 +26,7 @@ export function TestEmail({ baseUrl, publicAnonKey }: TestEmailProps) {
     const verificarConfig = async () => {
       try {
         const response = await fetch(`${baseUrl}/verificar-email-config`, {
-          headers: { Authorization: `Bearer ${publicAnonKey}` }
+          headers: getReadHeaders()
         });
         const result = await response.json();
         
@@ -144,10 +145,7 @@ export function TestEmail({ baseUrl, publicAnonKey }: TestEmailProps) {
       
       const response = await fetch(`${baseUrl}/enviar-email-parte`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${publicAnonKey}`
-        },
+        headers: getWriteHeaders(),
         body: JSON.stringify({
           destinatario: emailData.destinatario,
           cc: null,

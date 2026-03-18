@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { QrCode, Copy, RefreshCw, X, Check, Download } from 'lucide-react';
 import QRCodeLib from 'qrcode';
+import { getReadHeaders, getWriteHeaders } from '../utils/api-headers';
 
 interface QRControlProps {
   pedido: any;
@@ -36,7 +37,7 @@ export function QRControl({ pedido, baseUrl, publicAnonKey, onClose }: QRControl
       console.log('📋 ID extraído:', pedidoId);
       
       const response = await fetch(`${baseUrl}/pedidos/${pedidoId}/qr-token`, {
-        headers: { Authorization: `Bearer ${publicAnonKey}` }
+        headers: getReadHeaders()
       });
       
       console.log('📡 Respuesta recibida:', response.status);
@@ -69,7 +70,7 @@ export function QRControl({ pedido, baseUrl, publicAnonKey, onClose }: QRControl
       
       const response = await fetch(`${baseUrl}/pedidos/${pedidoId}/qr-regenerate`, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${publicAnonKey}` }
+        headers: getReadHeaders()
       });
       
       const data = await response.json();

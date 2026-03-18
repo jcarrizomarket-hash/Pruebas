@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { Plus, Edit2, Calendar, Users, UserCheck, UserX, Star, Trash2, AlertTriangle, CheckCircle2, XCircle, Clock, Repeat, CalendarRange, ChevronDown, ChevronUp, Download, Upload } from 'lucide-react';
 import * as XLSX from 'xlsx';
+import { getReadHeaders, getWriteHeaders } from '../utils/api-headers';
 
 const IDIOMAS = ['Castellano', 'Portugués', 'Catalán', 'Inglés', 'Francés', 'Alemán', 'Italiano'];
 const CERTIFICACIONES = ['PRL', 'Manipulación de alimentos', 'Primeros auxilios', 'APPCC', 'RCP'];
@@ -199,10 +200,7 @@ export function Camareros({ camareros, setCamareros, pedidos = [], coordinadores
     try {
       const response = await fetch(`${baseUrl}/camareros/${selectedCamarero.id}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${publicAnonKey}`
-        },
+        headers: getWriteHeaders(),
         body: JSON.stringify({ ...selectedCamarero, disponibilidad: disponibilidadFinal })
       });
       if (response.ok) {
@@ -223,10 +221,7 @@ export function Camareros({ camareros, setCamareros, pedidos = [], coordinadores
     try {
       const response = await fetch(`${baseUrl}/camareros/${selectedCamarero.id}`, {
         method: 'PUT',
-        headers: {
-           'Content-Type': 'application/json',
-           Authorization: `Bearer ${publicAnonKey}`
-        },
+        headers: getWriteHeaders(),
         body: JSON.stringify({ ...selectedCamarero, disponibilidad })
       });
       if (response.ok) {
@@ -257,7 +252,7 @@ export function Camareros({ camareros, setCamareros, pedidos = [], coordinadores
     try {
       const response = await fetch(endpoint, {
         method,
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${publicAnonKey}` },
+        headers: getWriteHeaders(),
         body: JSON.stringify(body)
       });
       const result = await response.json();
@@ -303,7 +298,7 @@ export function Camareros({ camareros, setCamareros, pedidos = [], coordinadores
     try {
       const response = await fetch(`${baseUrl}/camareros/${id}`, {
         method: 'DELETE',
-        headers: { Authorization: `Bearer ${publicAnonKey}` }
+        headers: getReadHeaders()
       });
       if (response.ok) {
         await cargarDatos();
@@ -317,7 +312,7 @@ export function Camareros({ camareros, setCamareros, pedidos = [], coordinadores
     try {
       const response = await fetch(`${baseUrl}/camareros/${camarero.id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${publicAnonKey}` },
+        headers: getWriteHeaders(),
         body: JSON.stringify({ ...camarero, estado: nuevoEstado })
       });
       if (response.ok) await cargarDatos();
@@ -432,10 +427,7 @@ export function Camareros({ camareros, setCamareros, pedidos = [], coordinadores
           // Crear en el servidor
           const response = await fetch(`${baseUrl}/camareros`, {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${publicAnonKey}`
-            },
+            headers: getWriteHeaders(),
             body: JSON.stringify(nuevoCamarero)
           });
 

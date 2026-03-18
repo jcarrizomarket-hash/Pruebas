@@ -22,6 +22,7 @@ import {
   Settings
 } from 'lucide-react';
 import { WhatsAppConfigStatus } from './whatsapp-config-status';
+import { getReadHeaders, getWriteHeaders } from '../utils/api-headers';
 
 interface DashboardProps {
   camareros: any[];
@@ -41,7 +42,7 @@ export function Dashboard({ camareros, pedidos, setActiveTab, baseUrl, publicAno
   const cargarClientes = async () => {
     try {
       const response = await fetch(`${baseUrl}/clientes`, {
-        headers: { Authorization: `Bearer ${publicAnonKey}` }
+        headers: getReadHeaders()
       });
       const data = await response.json();
       if (data.success) setClientes(data.data);

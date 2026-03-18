@@ -3,6 +3,7 @@ import { Shield, UserPlus, Download, Filter, X, Trash2, Edit2, Clock } from 'luc
 import * as XLSX from 'xlsx';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { RegistrosQRSection } from './registros-qr-section';
+import { getReadHeaders, getWriteHeaders } from '../utils/api-headers';
 
 interface AdminProps {
   coordinadores: any[];
@@ -408,10 +409,7 @@ function CoordinadoresSection({
       if (editingCoordinador) {
         const response = await fetch(`${baseUrl}/coordinadores/${editingCoordinador.id}`, {
           method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${publicAnonKey}`
-          },
+          headers: getWriteHeaders(),
           body: JSON.stringify({
             ...editingCoordinador,
             nombre,
@@ -432,10 +430,7 @@ function CoordinadoresSection({
       } else {
         const response = await fetch(`${baseUrl}/coordinadores`, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${publicAnonKey}`
-          },
+          headers: getWriteHeaders(),
           body: JSON.stringify({ nombre, telefono, email })
         });
         
@@ -469,9 +464,7 @@ function CoordinadoresSection({
     try {
       const response = await fetch(`${baseUrl}/coordinadores/${coordinador.id}`, {
         method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${publicAnonKey}`
-        }
+        headers: getReadHeaders()
       });
       
       const result = await response.json();

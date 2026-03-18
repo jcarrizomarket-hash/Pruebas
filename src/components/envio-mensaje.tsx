@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Send, MessageCircle, Search, Phone, MoreVertical, Check, X as XIcon, Clock } from 'lucide-react';
 import { projectId } from '../utils/supabase/info';
+import { getReadHeaders, getWriteHeaders } from '../utils/api-headers';
 
 // v2.0.0 - Interfaz tipo WhatsApp Web completa
 interface EnvioMensajeProps {
@@ -79,10 +80,7 @@ export function EnvioMensaje({ pedidos, camareros, coordinadores, baseUrl, publi
     try {
       await fetch(`${baseUrl}/guardar-token`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${publicAnonKey}`
-        },
+        headers: getWriteHeaders(),
         body: JSON.stringify({
           token: token,
           pedidoId: pedido.id,
@@ -165,10 +163,7 @@ export function EnvioMensaje({ pedidos, camareros, coordinadores, baseUrl, publi
     try {
       await fetch(`${baseUrl}/pedidos/${eventoSeleccionado.id}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${publicAnonKey}`
-        },
+        headers: getWriteHeaders(),
         body: JSON.stringify({
           ...eventoSeleccionado,
           asignaciones
@@ -194,10 +189,7 @@ export function EnvioMensaje({ pedidos, camareros, coordinadores, baseUrl, publi
     try {
       await fetch(`${baseUrl}/pedidos/${eventoSeleccionado.id}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${publicAnonKey}`
-        },
+        headers: getWriteHeaders(),
         body: JSON.stringify({
           ...eventoSeleccionado,
           asignaciones
@@ -233,10 +225,7 @@ export function EnvioMensaje({ pedidos, camareros, coordinadores, baseUrl, publi
     try {
       await fetch(`${baseUrl}/pedidos/${eventoSeleccionado.id}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${publicAnonKey}`
-        },
+        headers: getWriteHeaders(),
         body: JSON.stringify({
           ...eventoSeleccionado,
           asignaciones

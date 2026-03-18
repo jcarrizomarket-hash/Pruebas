@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { Send, Users, ChevronDown, MessageCircle, Check, CheckCheck } from 'lucide-react';
+import { getReadHeaders, getWriteHeaders } from '../utils/api-headers';
 
 interface ChatGrupalProps {
   pedidos: any[];
@@ -73,9 +74,7 @@ export function ChatGrupal({ pedidos, camareros, coordinadores, baseUrl, publicA
     const cargarMensajes = async () => {
       try {
         const response = await fetch(`${baseUrl}/chat-mensajes/${chatSeleccionado.id}`, {
-          headers: {
-            Authorization: `Bearer ${publicAnonKey}`
-          }
+          headers: getReadHeaders()
         });
         
         if (response.ok) {
@@ -116,10 +115,7 @@ export function ChatGrupal({ pedidos, camareros, coordinadores, baseUrl, publicA
     try {
       const response = await fetch(`${baseUrl}/chat-mensajes`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${publicAnonKey}`
-        },
+        headers: getWriteHeaders(),
         body: JSON.stringify(mensaje)
       });
 

@@ -6,6 +6,7 @@ import { TestEmail } from './test-email';
 import { WhatsAppTest } from './whatsapp-test';
 import { WhatsAppChatbotConfig } from './whatsapp-chatbot-config';
 import { PasswordControlPanel } from './password-control-panel';
+import { getReadHeaders, getWriteHeaders } from '../utils/api-headers';
 
 interface ConfiguracionProps {
   baseUrl: string;
@@ -48,10 +49,7 @@ export function Configuracion({ baseUrl, publicAnonKey, camareros = [], coordina
 
       const response = await fetch(`${baseUrl}/pedidos/${pedido.id}`, {
         method: 'DELETE',
-        headers: { 
-          Authorization: `Bearer ${publicAnonKey}`,
-          'Content-Type': 'application/json'
-        }
+        headers: getWriteHeaders()
       });
 
       const result = await response.json();
@@ -120,10 +118,7 @@ export function Configuracion({ baseUrl, publicAnonKey, camareros = [], coordina
 
       const response = await fetch(`${baseUrl}/limpiar-datos`, {
         method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${publicAnonKey}`,
-          'Content-Type': 'application/json'
-        },
+        headers: getWriteHeaders(),
         body: JSON.stringify({ categorias: categoriasSeleccionadas })
       });
 

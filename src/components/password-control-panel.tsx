@@ -4,6 +4,7 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { toast } from 'sonner';
+import { getReadHeaders, getWriteHeaders } from '../utils/api-headers';
 
 interface PasswordControlPanelProps {
   baseUrl: string;
@@ -43,9 +44,7 @@ export function PasswordControlPanel({ baseUrl, publicAnonKey }: PasswordControl
     try {
       setLoading(true);
       const response = await fetch(`${baseUrl}/usuarios`, {
-        headers: {
-          Authorization: `Bearer ${publicAnonKey}`
-        }
+        headers: getReadHeaders()
       });
       const result = await response.json();
       
@@ -70,10 +69,7 @@ export function PasswordControlPanel({ baseUrl, publicAnonKey }: PasswordControl
       setSendingReset(true);
       const response = await fetch(`${baseUrl}/enviar-reset-password`, {
         method: 'POST',
-        headers: {
-          Authorization: `Bearer ${publicAnonKey}`,
-          'Content-Type': 'application/json'
-        },
+        headers: getWriteHeaders(),
         body: JSON.stringify({ email: emailToReset })
       });
 
@@ -103,10 +99,7 @@ export function PasswordControlPanel({ baseUrl, publicAnonKey }: PasswordControl
       setCreatingUser(true);
       const response = await fetch(`${baseUrl}/usuarios`, {
         method: 'POST',
-        headers: {
-          Authorization: `Bearer ${publicAnonKey}`,
-          'Content-Type': 'application/json'
-        },
+        headers: getWriteHeaders(),
         body: JSON.stringify(newUser)
       });
 

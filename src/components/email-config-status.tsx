@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { CheckCircle, XCircle, AlertCircle, Mail, RefreshCw, Server } from 'lucide-react';
+import { getReadHeaders, getWriteHeaders } from '../utils/api-headers';
 
 interface EmailConfigStatusProps {
   baseUrl: string;
@@ -33,9 +34,7 @@ export function EmailConfigStatus({ baseUrl, publicAnonKey }: EmailConfigStatusP
     setStatus(prev => ({ ...prev, checking: true }));
     try {
       const response = await fetch(`${baseUrl}/verificar-email-config`, {
-        headers: {
-          Authorization: `Bearer ${publicAnonKey}`
-        }
+        headers: getReadHeaders()
       });
       const result = await response.json();
       console.log('🔍 Diagnóstico de email recibido:', result);

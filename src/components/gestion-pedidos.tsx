@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { Calendar, ChevronLeft, ChevronRight, Users, X, AlertCircle, Clock, Download, UserCheck, Check, ArrowLeft, Search, QrCode, ClipboardList } from 'lucide-react';
 import { QRControl } from './qr-control';
 import { RegistrosQRSection } from './registros-qr-section';
+import { getReadHeaders, getWriteHeaders } from '../utils/api-headers';
 
 // v1.0.3 - Verificación completa de React keys
 interface GestionPedidosProps {
@@ -62,10 +63,7 @@ export function GestionPedidos({ pedidos, setPedidos, camareros, baseUrl, public
           try {
             await fetch(`${baseUrl}/pedidos/${pedido.id}`, {
               method: 'PUT',
-              headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${publicAnonKey}`
-              },
+              headers: getWriteHeaders(),
               body: JSON.stringify({
                 ...pedido,
                 asignaciones: asignacionesFiltradas
@@ -245,10 +243,7 @@ export function GestionPedidos({ pedidos, setPedidos, camareros, baseUrl, public
     try {
       const response = await fetch(`${baseUrl}/pedidos/${selectedPedido.id}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${publicAnonKey}`
-        },
+        headers: getWriteHeaders(),
         body: JSON.stringify(updatedPedido)
       });
       
@@ -322,10 +317,7 @@ export function GestionPedidos({ pedidos, setPedidos, camareros, baseUrl, public
     try {
       const response = await fetch(`${baseUrl}/pedidos/${selectedPedido.id}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${publicAnonKey}`
-        },
+        headers: getWriteHeaders(),
         body: JSON.stringify(updatedPedido)
       });
       
@@ -351,10 +343,7 @@ export function GestionPedidos({ pedidos, setPedidos, camareros, baseUrl, public
     try {
       const response = await fetch(`${baseUrl}/pedidos/${selectedPedido.id}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${publicAnonKey}`
-        },
+        headers: getWriteHeaders(),
         body: JSON.stringify(updatedPedido)
       });
       
@@ -631,10 +620,7 @@ export function GestionPedidos({ pedidos, setPedidos, camareros, baseUrl, public
       try {
         const response = await fetch(`${baseUrl}/pedidos/${pedidoId}`, {
           method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${publicAnonKey}`
-          },
+          headers: getWriteHeaders(),
           body: JSON.stringify(updatedPedido)
         });
         

@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { Plus, MapPin, Calendar as CalendarIcon, Clock, Users, Edit2, Trash2, X, ChevronLeft, ChevronRight, Check, AlertCircle, BarChart3, TrendingUp, UserCheck, AlertTriangle, Send, Mail } from 'lucide-react';
+import { getReadHeaders, getWriteHeaders } from '../utils/api-headers';
 
 export function EntradaPedidos({ clientes, setClientes, pedidos, setPedidos, camareros = [], coordinadores = [], baseUrl, publicAnonKey, cargarDatos }) {
   const [showForm, setShowForm] = useState(false);
@@ -242,7 +243,7 @@ export function EntradaPedidos({ clientes, setClientes, pedidos, setPedidos, cam
       
       const response = await fetch(`${baseUrl}/pedidos/${id}`, {
         method: 'DELETE',
-        headers: { Authorization: `Bearer ${publicAnonKey}` }
+        headers: getReadHeaders()
       });
       
       const result = await response.json();
@@ -333,10 +334,7 @@ _Por favor confirme recepción de este mensaje._`;
 
       const response = await fetch(url, {
         method,
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${publicAnonKey}`
-        },
+        headers: getWriteHeaders(),
         body: JSON.stringify(dataToSend)
       });
       

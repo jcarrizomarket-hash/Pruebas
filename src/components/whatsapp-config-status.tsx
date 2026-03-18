@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { CheckCircle, XCircle, AlertCircle, ExternalLink, RefreshCw } from 'lucide-react';
+import { getReadHeaders, getWriteHeaders } from '../utils/api-headers';
 
 interface WhatsAppConfigStatusProps {
   baseUrl: string;
@@ -25,9 +26,7 @@ export function WhatsAppConfigStatus({ baseUrl, publicAnonKey }: WhatsAppConfigS
     setStatus(prev => ({ ...prev, checking: true }));
     try {
       const response = await fetch(`${baseUrl}/verificar-whatsapp-config`, {
-        headers: {
-          Authorization: `Bearer ${publicAnonKey}`
-        }
+        headers: getReadHeaders()
       });
       const result = await response.json();
       setStatus({

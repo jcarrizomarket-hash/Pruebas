@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { ClipboardList, Calendar, Clock, MapPin, Users, Download } from 'lucide-react';
 import { Button } from './ui/button';
 import * as XLSX from 'xlsx';
+import { getReadHeaders, getWriteHeaders } from '../utils/api-headers';
 
 interface PerfilViewProps {
   baseUrl: string;
@@ -34,9 +35,7 @@ export function PerfilView({ baseUrl, publicAnonKey, userEmail }: PerfilViewProp
     try {
       setLoading(true);
       const response = await fetch(`${baseUrl}/registros-perfil?email=${encodeURIComponent(userEmail)}`, {
-        headers: {
-          Authorization: `Bearer ${publicAnonKey}`
-        }
+        headers: getReadHeaders()
       });
       const result = await response.json();
       

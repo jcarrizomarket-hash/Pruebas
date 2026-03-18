@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { Send, MessageSquare, Users, Bot, CheckCircle, Clock, MapPin, Calendar, X, Phone, Mail as MailIcon, ChevronDown, ChevronUp, FileCheck } from 'lucide-react';
+import { getReadHeaders, getWriteHeaders } from '../utils/api-headers';
 
 interface EnviosProps {
   pedidos: any[];
@@ -60,9 +61,7 @@ export function Envios({ pedidos, camareros, coordinadores, clientes, baseUrl, p
     try {
       const response = await fetch(`${baseUrl}/diagnostico-whatsapp`, {
         method: 'GET',
-        headers: {
-          Authorization: `Bearer ${publicAnonKey}`
-        }
+        headers: getReadHeaders()
       });
       
       const result = await response.json();
@@ -128,10 +127,7 @@ Por favor confirma tu asistencia respondiendo este mensaje.`;
     try {
       const response = await fetch(`${baseUrl}/enviar-mensaje-grupal`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${publicAnonKey}`
-        },
+        headers: getWriteHeaders(),
         body: JSON.stringify({
           pedidoId: selectedEvento.id,
           mensaje
@@ -222,10 +218,7 @@ Por favor confirma tu asistencia respondiendo este mensaje.`;
     try {
       await fetch(`${baseUrl}/chat-mensajes`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${publicAnonKey}`
-        },
+        headers: getWriteHeaders(),
         body: JSON.stringify({
           chatId: `chat:${selectedChatEvento.id}`,
           id: nuevoMensaje.id,
@@ -263,10 +256,7 @@ Por favor confirma tu asistencia respondiendo este mensaje.`;
     try {
       const response = await fetch(`${baseUrl}/chatbot`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${publicAnonKey}`
-        },
+        headers: getWriteHeaders(),
         body: JSON.stringify({
           messages: [...chatbotMessages, userMessage],
           context: {
@@ -423,10 +413,7 @@ Generado: ${new Date().toLocaleString('es-ES')}`;
       
       const response = await fetch(`${baseUrl}/enviar-parte`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${publicAnonKey}`
-        },
+        headers: getWriteHeaders(),
         body: JSON.stringify({
           eventoId: evento.id,
           clienteEmails: emailsFinal,

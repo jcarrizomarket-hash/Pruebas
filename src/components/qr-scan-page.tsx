@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { QrCode, CheckCircle, XCircle, Clock, MapPin, Calendar, Users, ArrowRight, Loader2 } from 'lucide-react';
+import { getReadHeaders, getWriteHeaders } from '../utils/api-headers';
 
 interface QRScanPageProps {
   token: string;
@@ -26,7 +27,7 @@ export function QRScanPage({ token, baseUrl, publicAnonKey }: QRScanPageProps) {
     try {
       // Validar token y obtener pedido
       const pedidoResponse = await fetch(`${baseUrl}/qr-scan/${token}`, {
-        headers: { Authorization: `Bearer ${publicAnonKey}` }
+        headers: getReadHeaders()
       });
       
       const pedidoData = await pedidoResponse.json();
@@ -41,7 +42,7 @@ export function QRScanPage({ token, baseUrl, publicAnonKey }: QRScanPageProps) {
       
       // Obtener datos completos de los camareros asignados
       const camarerosResponse = await fetch(`${baseUrl}/camareros`, {
-        headers: { Authorization: `Bearer ${publicAnonKey}` }
+        headers: getReadHeaders()
       });
       
       const camarerosData = await camarerosResponse.json();

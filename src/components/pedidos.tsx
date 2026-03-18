@@ -3,6 +3,7 @@ import { Building2, Briefcase, CalendarDays } from 'lucide-react';
 import { Clientes } from './clientes';
 import { EntradaPedidos } from './entrada-pedidos';
 import { GestionPedidos } from './gestion-pedidos';
+import { getReadHeaders, getWriteHeaders } from '../utils/api-headers';
 
 interface PedidosProps {
   pedidos: any[];
@@ -33,7 +34,7 @@ export function Pedidos({
   const cargarClientes = async () => {
     try {
       const response = await fetch(`${baseUrl}/clientes`, {
-        headers: { Authorization: `Bearer ${publicAnonKey}` }
+        headers: getReadHeaders()
       });
       const data = await response.json();
       if (data.success) setClientes(data.data);
