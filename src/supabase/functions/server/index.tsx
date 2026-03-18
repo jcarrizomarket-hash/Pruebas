@@ -16,11 +16,11 @@ const requireSecret = async (c, next) => {
   const expectedSecret = Deno.env.get('FN_SECRET');
   const providedSecret = c.req.header('x-fn-secret');
   
-  // Solo validar en m√©todos mutantes
+  // Solo validar en m‚àö¬©todos mutantes
   const methodsToProtect = ['POST', 'PUT', 'DELETE', 'PATCH'];
   if (methodsToProtect.includes(c.req.method)) {
     if (expectedSecret && providedSecret !== expectedSecret) {
-      console.warn(`‚ùå Acceso no autorizado: ${c.req.method} ${c.req.url}`);
+      console.warn(`‚Äö√π√• Acceso no autorizado: ${c.req.method} ${c.req.url}`);
       return c.json({ success: false, error: 'No autorizado' }, 401);
     }
   }
@@ -37,7 +37,7 @@ const supabase = createClient(
 app.get('/test', (c) => {
   return c.json({ 
     success: true, 
-    message: '¬°Servidor funcionando correctamente!',
+    message: '¬¨¬∞Servidor funcionando correctamente!',
     timestamp: new Date().toISOString(),
     basePath: '/make-server-ce05fe95'
   });
@@ -58,10 +58,10 @@ app.post('/clientes', requireSecret, async (c) => {
   try {
     const datos = await c.req.json();
     const cliente = await db.crearCliente(supabase, datos);
-    console.log('‚úÖ Cliente creado:', cliente.codigo, '-', cliente.nombre);
+    console.log('‚Äö√∫√ñ Cliente creado:', cliente.codigo, '-', cliente.nombre);
     return c.json({ success: true, data: cliente });
   } catch (error) {
-    console.error('‚ùå Error al crear cliente:', error);
+    console.error('‚Äö√π√• Error al crear cliente:', error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
@@ -104,10 +104,10 @@ app.post('/camareros', requireSecret, async (c) => {
   try {
     const datos = await c.req.json();
     const camarero = await db.crearCamarero(supabase, datos);
-    console.log('‚úÖ Camarero creado:', camarero.codigo, '-', camarero.nombre, camarero.apellido);
+    console.log('‚Äö√∫√ñ Camarero creado:', camarero.codigo, '-', camarero.nombre, camarero.apellido);
     return c.json({ success: true, data: camarero });
   } catch (error) {
-    console.error('‚ùå Error al crear camarero:', error);
+    console.error('‚Äö√π√• Error al crear camarero:', error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
@@ -150,10 +150,10 @@ app.post('/coordinadores', requireSecret, async (c) => {
   try {
     const datos = await c.req.json();
     const coordinador = await db.crearCoordinador(supabase, datos);
-    console.log('‚úÖ Coordinador creado:', coordinador.codigo, '-', coordinador.nombre);
+    console.log('‚Äö√∫√ñ Coordinador creado:', coordinador.codigo, '-', coordinador.nombre);
     return c.json({ success: true, data: coordinador });
   } catch (error) {
-    console.error('‚ùå Error al crear coordinador:', error);
+    console.error('‚Äö√π√• Error al crear coordinador:', error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
@@ -196,10 +196,10 @@ app.post('/pedidos', requireSecret, async (c) => {
   try {
     const datos = await c.req.json();
     const pedido = await db.crearPedido(supabase, datos);
-    console.log('‚úÖ Pedido creado:', pedido.codigo, '-', pedido.cliente);
+    console.log('‚Äö√∫√ñ Pedido creado:', pedido.codigo, '-', pedido.cliente);
     return c.json({ success: true, data: pedido });
   } catch (error) {
-    console.error('‚ùå Error al crear pedido:', error);
+    console.error('‚Äö√π√• Error al crear pedido:', error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
@@ -209,12 +209,12 @@ app.put('/pedidos/:id', async (c) => {
     const id = c.req.param('id');
     const datos = await c.req.json();
     
-    console.log('üìù Actualizando pedido:', id);
+    console.log('Ô£ø√º√¨√π Actualizando pedido:', id);
     
     const pedido = await db.actualizarPedido(supabase, id, datos);
     return c.json({ success: true, data: pedido });
   } catch (error) {
-    console.error('‚ùå Error al actualizar pedido:', error);
+    console.error('‚Äö√π√• Error al actualizar pedido:', error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
@@ -222,12 +222,12 @@ app.put('/pedidos/:id', async (c) => {
 app.delete('/pedidos/:id', async (c) => {
   try {
     const id = c.req.param('id');
-    console.log(`üóëÔ∏è Intentando eliminar pedido con ID: ${id}`);
+    console.log(`Ô£ø√º√≥√´√î‚àè√® Intentando eliminar pedido con ID: ${id}`);
     await db.eliminarPedido(supabase, id);
-    console.log(`‚úÖ Pedido ${id} eliminado correctamente`);
+    console.log(`‚Äö√∫√ñ Pedido ${id} eliminado correctamente`);
     return c.json({ success: true });
   } catch (error) {
-    console.error('‚ùå Error al eliminar pedido:', error);
+    console.error('‚Äö√π√• Error al eliminar pedido:', error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
@@ -304,12 +304,12 @@ app.post('/guardar-token', async (c) => {
   }
 });
 
-// Funci√≥n para enviar notificaci√≥n al coordinador
+// Funci‚àö‚â•n para enviar notificaci‚àö‚â•n al coordinador
 async function notificarCoordinador(coordinadorId: string, mensaje: string) {
   try {
     const coordinador = await kv.get(coordinadorId);
     if (!coordinador || !coordinador.telefono) {
-      console.log('Coordinador sin tel√©fono configurado');
+      console.log('Coordinador sin tel‚àö¬©fono configurado');
       return;
     }
 
@@ -318,11 +318,11 @@ async function notificarCoordinador(coordinadorId: string, mensaje: string) {
     const whatsappPhoneId = Deno.env.get('WHATSAPP_PHONE_ID');
     
     if (!whatsappApiKey || !whatsappPhoneId) {
-      console.log('WhatsApp API no configurada. Mensaje que se enviar√≠a:', mensaje);
+      console.log('WhatsApp API no configurada. Mensaje que se enviar‚àö‚â†a:', mensaje);
       return;
     }
 
-    // Limpiar n√∫mero de tel√©fono
+    // Limpiar n‚àö‚à´mero de tel‚àö¬©fono
     let numeroLimpio = coordinador.telefono.replace(/\D/g, '');
     if (numeroLimpio.length === 9) {
       numeroLimpio = '34' + numeroLimpio;
@@ -346,7 +346,7 @@ async function notificarCoordinador(coordinadorId: string, mensaje: string) {
     });
 
     const result = await response.json();
-    console.log('Notificaci√≥n enviada al coordinador:', result);
+    console.log('Notificaci‚àö‚â•n enviada al coordinador:', result);
   } catch (error) {
     console.log('Error al notificar coordinador:', error);
   }
@@ -373,8 +373,8 @@ app.get('/confirmar/:token', async (c) => {
         </head>
         <body>
           <div class="container">
-            <h1 class="error">‚ùå Error</h1>
-            <p>El enlace de confirmaci√≥n no es v√°lido o ya ha sido utilizado.</p>
+            <h1 class="error">‚Äö√π√• Error</h1>
+            <p>El enlace de confirmaci‚àö‚â•n no es v‚àö¬∞lido o ya ha sido utilizado.</p>
           </div>
         </body>
         </html>
@@ -401,7 +401,7 @@ app.get('/confirmar/:token', async (c) => {
         </head>
         <body>
           <div class="container">
-            <h1 class="error">‚ùå Error</h1>
+            <h1 class="error">‚Äö√π√• Error</h1>
             <p>El pedido no existe.</p>
           </div>
         </body>
@@ -416,11 +416,11 @@ app.get('/confirmar/:token', async (c) => {
     
     await kv.set(pedidoId, { ...pedido, asignaciones });
     
-    console.log(`‚úÖ CONFIRMACI√ìN: Camarero ${camarero?.nombre} ${camarero?.apellido} confirm√≥ asistencia al evento "${pedido.cliente}"`);
+    console.log(`‚Äö√∫√ñ CONFIRMACI‚àö√¨N: Camarero ${camarero?.nombre} ${camarero?.apellido} confirm‚àö‚â• asistencia al evento "${pedido.cliente}"`);
     console.log(`   Estado actualizado: confirmado`);
     console.log(`   Asignaciones totales: ${asignaciones.length}`);
     
-    // Verificar si todos han confirmado y crear chat grupal autom√°ticamente
+    // Verificar si todos han confirmado y crear chat grupal autom‚àö¬∞ticamente
     const todosConfirmados = asignaciones.length > 0 && asignaciones.every(a => a.estado === 'confirmado');
     
     if (todosConfirmados) {
@@ -428,7 +428,7 @@ app.get('/confirmar/:token', async (c) => {
       const chatExistente = await kv.get(chatId);
       
       if (!chatExistente) {
-        // Calcular fecha de eliminaci√≥n programada (24h despu√©s del evento)
+        // Calcular fecha de eliminaci‚àö‚â•n programada (24h despu‚àö¬©s del evento)
         const fechaEvento = new Date(pedido.diaEvento);
         const horaFin = pedido.horaSalida || '23:59';
         const [horaFinH, horaFinM] = horaFin.split(':');
@@ -474,7 +474,7 @@ app.get('/confirmar/:token', async (c) => {
         await kv.set(chatId, chat);
         await kv.set(`${chatId}:mensajes`, []);
         
-        console.log(`‚úÖ Chat grupal creado autom√°ticamente para pedido: ${pedido.cliente} (Expira: ${fechaEliminacion.toISOString()})`);
+        console.log(`‚Äö√∫√ñ Chat grupal creado autom‚àö¬∞ticamente para pedido: ${pedido.cliente} (Expira: ${fechaEliminacion.toISOString()})`);
       }
     }
     
@@ -485,10 +485,10 @@ app.get('/confirmar/:token', async (c) => {
       day: 'numeric', 
       month: 'long' 
     });
-    let mensajeCoordinador = `‚úÖ CONFIRMACI√ìN RECIBIDA\n\n${nombreCamarero} ha confirmado su asistencia.\n\nEvento: ${pedido.cliente}\nFecha: ${fechaEvento}\nLugar: ${pedido.lugar}\nHora: ${pedido.horaEntrada}`;
+    let mensajeCoordinador = `‚Äö√∫√ñ CONFIRMACI‚àö√¨N RECIBIDA\n\n${nombreCamarero} ha confirmado su asistencia.\n\nEvento: ${pedido.cliente}\nFecha: ${fechaEvento}\nLugar: ${pedido.lugar}\nHora: ${pedido.horaEntrada}`;
     
     if (todosConfirmados) {
-      mensajeCoordinador += `\n\nüéâ ¬°TODOS LOS CAMAREROS HAN CONFIRMADO!\n‚úÖ Chat grupal creado autom√°ticamente`;
+      mensajeCoordinador += `\n\nÔ£ø√º√©√¢ ¬¨¬∞TODOS LOS CAMAREROS HAN CONFIRMADO!\n‚Äö√∫√ñ Chat grupal creado autom‚àö¬∞ticamente`;
     }
     
     await notificarCoordinador(coordinadorId, mensajeCoordinador);
@@ -502,7 +502,7 @@ app.get('/confirmar/:token', async (c) => {
       <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Confirmaci√≥n Exitosa</title>
+        <title>Confirmaci‚àö‚â•n Exitosa</title>
         <style>
           body { font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; background: #f5f5f5; }
           .container { background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); text-align: center; max-width: 400px; }
@@ -513,11 +513,11 @@ app.get('/confirmar/:token', async (c) => {
       </head>
       <body>
         <div class="container">
-          <div class="success">‚úì</div>
-          <h1>¬°Confirmado!</h1>
+          <div class="success">‚Äö√∫√¨</div>
+          <h1>¬¨¬∞Confirmado!</h1>
           <p>Has confirmado tu asistencia al evento exitosamente.</p>
-          <p>El coordinador ha sido notificado de tu confirmaci√≥n.</p>
-          <p>Gracias por tu confirmaci√≥n.</p>
+          <p>El coordinador ha sido notificado de tu confirmaci‚àö‚â•n.</p>
+          <p>Gracias por tu confirmaci‚àö‚â•n.</p>
         </div>
       </body>
       </html>
@@ -539,8 +539,8 @@ app.get('/confirmar/:token', async (c) => {
       </head>
       <body>
         <div class="container">
-          <h1 class="error">‚ùå Error</h1>
-          <p>Ha ocurrido un error al procesar tu confirmaci√≥n.</p>
+          <h1 class="error">‚Äö√π√• Error</h1>
+          <p>Ha ocurrido un error al procesar tu confirmaci‚àö‚â•n.</p>
         </div>
       </body>
       </html>
@@ -569,8 +569,8 @@ app.get('/no-confirmar/:token', async (c) => {
         </head>
         <body>
           <div class="container">
-            <h1 class="error">‚ùå Error</h1>
-            <p>El enlace no es v√°lido o ya ha sido utilizado.</p>
+            <h1 class="error">‚Äö√π√• Error</h1>
+            <p>El enlace no es v‚àö¬∞lido o ya ha sido utilizado.</p>
           </div>
         </body>
         </html>
@@ -582,7 +582,7 @@ app.get('/no-confirmar/:token', async (c) => {
     const camarero = await kv.get(camareroId);
     
     if (pedido) {
-      // CAMBIO: En lugar de eliminar inmediatamente, marcar como rechazado con eliminaci√≥n programada en 5 horas
+      // CAMBIO: En lugar de eliminar inmediatamente, marcar como rechazado con eliminaci‚àö‚â•n programada en 5 horas
       const asignaciones = pedido.asignaciones.map(a => 
         a.camareroId === camareroId ? { 
           ...a, 
@@ -592,9 +592,9 @@ app.get('/no-confirmar/:token', async (c) => {
       );
       await kv.set(pedidoId, { ...pedido, asignaciones });
       
-      console.log(`‚ùå RECHAZO: Camarero ${camarero?.nombre} ${camarero?.apellido} rechaz√≥ el evento "${pedido.cliente}"`);
+      console.log(`‚Äö√π√• RECHAZO: Camarero ${camarero?.nombre} ${camarero?.apellido} rechaz‚àö‚â• el evento "${pedido.cliente}"`);
       console.log(`   Estado actualizado: rechazado`);
-      console.log(`   Eliminaci√≥n programada: ${new Date(Date.now() + 5 * 60 * 60 * 1000).toISOString()}`);
+      console.log(`   Eliminaci‚àö‚â•n programada: ${new Date(Date.now() + 5 * 60 * 60 * 1000).toISOString()}`);
       
       // Notificar al coordinador
       const nombreCamarero = camarero ? `${camarero.nombre} ${camarero.apellido}` : 'Camarero';
@@ -603,7 +603,7 @@ app.get('/no-confirmar/:token', async (c) => {
         day: 'numeric', 
         month: 'long' 
       });
-      const mensajeCoordinador = `‚ùå RECHAZO DE SERVICIO\n\n${nombreCamarero} ha indicado que NO puede asistir.\n\nEvento: ${pedido.cliente}\nFecha: ${fechaEvento}\nLugar: ${pedido.lugar}\nHora: ${pedido.horaEntrada}\n\n‚ö†Ô∏è Ser√° eliminado autom√°ticamente en 5 horas.\n\nüí° ACCI√ìN REQUERIDA: Asignar un camarero de reemplazo.`;
+      const mensajeCoordinador = `‚Äö√π√• RECHAZO DE SERVICIO\n\n${nombreCamarero} ha indicado que NO puede asistir.\n\nEvento: ${pedido.cliente}\nFecha: ${fechaEvento}\nLugar: ${pedido.lugar}\nHora: ${pedido.horaEntrada}\n\n‚Äö√∂‚Ä†√î‚àè√® Ser‚àö¬∞ eliminado autom‚àö¬∞ticamente en 5 horas.\n\nÔ£ø√º√≠¬∞ ACCI‚àö√¨N REQUERIDA: Asignar un camarero de reemplazo.`;
       
       await notificarCoordinador(coordinadorId, mensajeCoordinador);
     }
@@ -628,10 +628,10 @@ app.get('/no-confirmar/:token', async (c) => {
       </head>
       <body>
         <div class="container">
-          <div class="info">‚úó</div>
+          <div class="info">‚Äö√∫√≥</div>
           <h1>No Confirmado</h1>
-          <p>Has indicado que no podr√°s asistir al evento.</p>
-          <p>Ser√°s eliminado autom√°ticamente en 5 horas si no se toma acci√≥n.</p>
+          <p>Has indicado que no podr‚àö¬∞s asistir al evento.</p>
+          <p>Ser‚àö¬∞s eliminado autom‚àö¬∞ticamente en 5 horas si no se toma acci‚àö‚â•n.</p>
           <p>El coordinador ha sido notificado para buscar un reemplazo.</p>
           <p>Gracias por tu respuesta.</p>
         </div>
@@ -639,7 +639,7 @@ app.get('/no-confirmar/:token', async (c) => {
       </html>
     `);
   } catch (error) {
-    console.log('Error al procesar no confirmaci√≥n:', error);
+    console.log('Error al procesar no confirmaci‚àö‚â•n:', error);
     return c.html(`
       <!DOCTYPE html>
       <html>
@@ -655,7 +655,7 @@ app.get('/no-confirmar/:token', async (c) => {
       </head>
       <body>
         <div class="container">
-          <h1 class="error">‚ùå Error</h1>
+          <h1 class="error">‚Äö√π√• Error</h1>
           <p>Ha ocurrido un error al procesar tu respuesta.</p>
         </div>
       </body>
@@ -680,7 +680,7 @@ app.post('/crear-chat-grupal', async (c) => {
     const todosConfirmados = asignaciones.length > 0 && asignaciones.every(a => a.estado === 'confirmado');
     
     if (!todosConfirmados) {
-      return c.json({ success: false, error: 'No todos han confirmado a√∫n' });
+      return c.json({ success: false, error: 'No todos han confirmado a‚àö‚à´n' });
     }
     
     // Verificar si ya existe un chat para este pedido
@@ -694,14 +694,14 @@ app.post('/crear-chat-grupal', async (c) => {
     // Crear el chat
     const chatId = `chat:${pedidoId}`;
     
-    // Calcular fecha de eliminaci√≥n programada (24h despu√©s del evento)
+    // Calcular fecha de eliminaci‚àö‚â•n programada (24h despu‚àö¬©s del evento)
     const fechaEvento = new Date(pedido.diaEvento);
-    const horaFin = pedido.horaSalida || '23:59'; // Usar hora de salida o fin del d√≠a
+    const horaFin = pedido.horaSalida || '23:59'; // Usar hora de salida o fin del d‚àö‚â†a
     const [horaFinH, horaFinM] = horaFin.split(':');
     fechaEvento.setHours(parseInt(horaFinH), parseInt(horaFinM), 0, 0);
     const fechaEliminacion = new Date(fechaEvento.getTime() + 24 * 60 * 60 * 1000); // +24 horas
     
-    // Construir lista de miembros seg√∫n esquema
+    // Construir lista de miembros seg‚àö‚à´n esquema
     const miembros = [
       {
         user_id: coordinadorId,
@@ -725,7 +725,7 @@ app.post('/crear-chat-grupal', async (c) => {
       miembros,
       activo: true,
       fecha_eliminacion_programada: fechaEliminacion.toISOString(),
-      // Campos adicionales para compatibilidad con c√≥digo existente
+      // Campos adicionales para compatibilidad con c‚àö‚â•digo existente
       pedidoId,
       coordinadorId,
       camareroIds: asignaciones.map(a => a.camareroId),
@@ -739,7 +739,7 @@ app.post('/crear-chat-grupal', async (c) => {
     
     await kv.set(chatId, chat);
     
-    // Inicializar array de mensajes vac√≠o
+    // Inicializar array de mensajes vac‚àö‚â†o
     await kv.set(`${chatId}:mensajes`, []);
     
     return c.json({ success: true, chatId, chat });
@@ -749,10 +749,10 @@ app.post('/crear-chat-grupal', async (c) => {
   }
 });
 
-// Diagn√≥stico completo de chats
+// Diagn‚àö‚â•stico completo de chats
 app.get('/diagnostico-chats', async (c) => {
   try {
-    console.log('üîç === EJECUTANDO DIAGN√ìSTICO COMPLETO DE CHATS ===');
+    console.log('Ô£ø√º√Æ√ß === EJECUTANDO DIAGN‚àö√¨STICO COMPLETO DE CHATS ===');
     
     // Obtener todos los datos relevantes - MIGRADO A SQL
     const todosLosChats = await db.obtenerChats(supabase);
@@ -761,7 +761,7 @@ app.get('/diagnostico-chats', async (c) => {
     
     const ahora = new Date();
     
-    // Informaci√≥n de coordinadores
+    // Informaci‚àö‚â•n de coordinadores
     const infoCoordinadores = todosLosCoordinadores.map(coord => ({
       id: coord.id,
       nombre: coord.nombre,
@@ -769,7 +769,7 @@ app.get('/diagnostico-chats', async (c) => {
       telefono: coord.telefono
     }));
     
-    // Informaci√≥n de chats con c√°lculo de expiraci√≥n
+    // Informaci‚àö‚â•n de chats con c‚àö¬∞lculo de expiraci‚àö‚â•n
     const infoChats = todosLosChats.map(chat => {
       let fechaExpiracion;
       
@@ -800,7 +800,7 @@ app.get('/diagnostico-chats', async (c) => {
       };
     });
     
-    // Informaci√≥n de eventos con confirmaciones - MEJORADA
+    // Informaci‚àö‚â•n de eventos con confirmaciones - MEJORADA
     // Nota: Necesitamos obtener asignaciones para cada pedido
     const infoEventos = [];
     
@@ -872,13 +872,13 @@ app.get('/diagnostico-chats', async (c) => {
           mensaje: `Evento "${evento.cliente}" tiene todos confirmados pero no tiene chat`,
           pedidoId: evento.pedidoId,
           cliente: evento.cliente,
-          // NUEVO: Informaci√≥n adicional
+          // NUEVO: Informaci‚àö‚â•n adicional
           coordinadorId: evento.coordinadorId,
           tieneCoordinadorId: evento.tieneCoordinadorId
         };
         
         if (!evento.tieneCoordinadorId) {
-          problema.mensaje += ' (‚ö†Ô∏è NO TIENE coordinadorId - esta es la causa)';
+          problema.mensaje += ' (‚Äö√∂‚Ä†√î‚àè√® NO TIENE coordinadorId - esta es la causa)';
         }
         
         diagnostico.posiblesProblemas.push(problema);
@@ -899,19 +899,19 @@ app.get('/diagnostico-chats', async (c) => {
       }
     }
     
-    console.log('üìä DIAGN√ìSTICO COMPLETO:', JSON.stringify(diagnostico, null, 2));
+    console.log('Ô£ø√º√¨√§ DIAGN‚àö√¨STICO COMPLETO:', JSON.stringify(diagnostico, null, 2));
     
     return c.json({ success: true, diagnostico });
   } catch (error) {
-    console.log('‚ùå Error en diagn√≥stico:', error);
+    console.log('‚Äö√π√• Error en diagn‚àö‚â•stico:', error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
 
-// Reparar chats faltantes autom√°ticamente
+// Reparar chats faltantes autom‚àö¬∞ticamente
 app.post('/reparar-chats', async (c) => {
   try {
-    console.log('üîß === INICIANDO REPARACI√ìN DE CHATS (SQL) ===');
+    console.log('Ô£ø√º√Æ√ü === INICIANDO REPARACI‚àö√¨N DE CHATS (SQL) ===');
     
     const { pedidosIds, coordinadorIdPorDefecto } = await c.req.json();
     
@@ -993,7 +993,7 @@ app.post('/reparar-chats', async (c) => {
           mensajes: []
         });
         
-        console.log(`‚úÖ Chat creado para pedido ${pedidoId}: ${pedido.cliente}`);
+        console.log(`‚Äö√∫√ñ Chat creado para pedido ${pedidoId}: ${pedido.cliente}`);
         
         resultados.push({
           pedidoId,
@@ -1020,7 +1020,7 @@ app.post('/reparar-chats', async (c) => {
       fallidos: resultados.filter(r => !r.success).length
     };
     
-    console.log('üîß RESUMEN DE REPARACI√ìN:', resumen);
+    console.log('Ô£ø√º√Æ√ü RESUMEN DE REPARACI‚àö√¨N:', resumen);
     
     return c.json({ 
       success: true, 
@@ -1028,22 +1028,22 @@ app.post('/reparar-chats', async (c) => {
       resultados 
     });
   } catch (error) {
-    console.log('‚ùå Error al reparar chats:', error);
+    console.log('‚Äö√π√• Error al reparar chats:', error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
 
-// Obtener chats del coordinador (con limpieza autom√°tica de expirados)
+// Obtener chats del coordinador (con limpieza autom‚àö¬∞tica de expirados)
 app.get('/chats/:coordinadorId', async (c) => {
   try {
     const coordinadorId = c.req.param('coordinadorId');
-    console.log(`üîç Buscando chats para coordinadorId: ${coordinadorId}`);
+    console.log(`Ô£ø√º√Æ√ß Buscando chats para coordinadorId: ${coordinadorId}`);
     
     // Usar SQL en lugar de KV
     const todosLosChats = await db.obtenerChatsPorCoordinador(supabase, coordinadorId);
-    console.log(`üîç Total de chats para coordinador ${coordinadorId}: ${todosLosChats.length}`);
+    console.log(`Ô£ø√º√Æ√ß Total de chats para coordinador ${coordinadorId}: ${todosLosChats.length}`);
     
-    // Limpiar chats expirados (24 horas despu√©s del evento + hora de salida)
+    // Limpiar chats expirados (24 horas despu‚àö¬©s del evento + hora de salida)
     const ahora = new Date();
     const chatsActivos = [];
     
@@ -1062,17 +1062,17 @@ app.get('/chats/:coordinadorId', async (c) => {
         fechaExpiracion = new Date(fechaEvento.getTime() + 24 * 60 * 60 * 1000);
       }
       
-      // Si a√∫n no ha expirado, mantenerlo
+      // Si a‚àö‚à´n no ha expirado, mantenerlo
       if (ahora < fechaExpiracion) {
         chatsActivos.push(chat);
       } else {
         // Eliminar chat expirado
         await db.eliminarChat(supabase, chat.id);
-        console.log(`üóëÔ∏è Chat eliminado por expiraci√≥n: ${chat.id} - Expir√≥ el ${fechaExpiracion.toISOString()}`);
+        console.log(`Ô£ø√º√≥√´√î‚àè√® Chat eliminado por expiraci‚àö‚â•n: ${chat.id} - Expir‚àö‚â• el ${fechaExpiracion.toISOString()}`);
       }
     }
     
-    console.log(`üìä Chats activos para coordinador ${coordinadorId}: ${chatsActivos.length} de ${todosLosChats.length}`);
+    console.log(`Ô£ø√º√¨√§ Chats activos para coordinador ${coordinadorId}: ${chatsActivos.length} de ${todosLosChats.length}`);
     
     return c.json({ success: true, data: chatsActivos });
   } catch (error) {
@@ -1104,9 +1104,9 @@ app.post('/chat-mensaje', async (c) => {
   }
 });
 
-// ============== ENV√çO DE EMAIL ==============
+// ============== ENV‚àö√ßO DE EMAIL ==============
 
-// Funci√≥n para generar PDF del parte de servicio
+// Funci‚àö‚â•n para generar PDF del parte de servicio
 async function generarPDFParte(pedido: any, parteHTML: string): Promise<string> {
   try {
     // Usar jsPDF en lugar de PDFKit para evitar warnings de readFileSync
@@ -1118,25 +1118,25 @@ async function generarPDFParte(pedido: any, parteHTML: string): Promise<string> 
       format: 'a4'
     });
     
-    // Configuraci√≥n de fuentes y estilos
+    // Configuraci‚àö‚â•n de fuentes y estilos
     const pageWidth = 210; // A4 width in mm
     const margin = 15;
     const contentWidth = pageWidth - (margin * 2);
     
     let yPos = 20;
     
-    // T√≠tulo
+    // T‚àö‚â†tulo
     doc.setFontSize(20);
     doc.setFont('helvetica', 'bold');
     doc.text('PARTE DE SERVICIO', pageWidth / 2, yPos, { align: 'center' });
     yPos += 10;
     
-    // L√≠nea separadora
+    // L‚àö‚â†nea separadora
     doc.setLineWidth(0.5);
     doc.line(margin, yPos, pageWidth - margin, yPos);
     yPos += 10;
     
-    // Informaci√≥n del evento en dos columnas
+    // Informaci‚àö‚â•n del evento en dos columnas
     doc.setFontSize(10);
     doc.setFont('helvetica', 'bold');
     
@@ -1155,7 +1155,7 @@ async function generarPDFParte(pedido: any, parteHTML: string): Promise<string> 
     
     // Segunda fila
     doc.setFont('helvetica', 'bold');
-    doc.text('D√≠a:', margin, yPos);
+    doc.text('D‚àö‚â†a:', margin, yPos);
     doc.setFont('helvetica', 'normal');
     const fechaEvento = new Date(pedido.diaEvento).toLocaleDateString('es-ES', { 
       weekday: 'long', 
@@ -1175,7 +1175,7 @@ async function generarPDFParte(pedido: any, parteHTML: string): Promise<string> 
     
     yPos += 12;
     
-    // L√≠nea separadora
+    // L‚àö‚â†nea separadora
     doc.line(margin, yPos, pageWidth - margin, yPos);
     yPos += 8;
     
@@ -1223,7 +1223,7 @@ async function generarPDFParte(pedido: any, parteHTML: string): Promise<string> 
         xPos += colWidths[0];
       }
       
-      // L√≠neas verticales de la tabla
+      // L‚àö‚â†neas verticales de la tabla
       for (let j = 1; j < colWidths.length; j++) {
         doc.line(xPos, yPos, xPos, yPos + rowHeight);
         xPos += colWidths[j];
@@ -1247,13 +1247,13 @@ async function generarPDFParte(pedido: any, parteHTML: string): Promise<string> 
     const pdfBase64 = doc.output('datauristring').split(',')[1];
     return pdfBase64;
   } catch (error) {
-    console.log('‚ö†Ô∏è Error al generar PDF, usando fallback...', error);
-    // Retornar vac√≠o si falla, el email se enviar√° sin adjunto
+    console.log('‚Äö√∂‚Ä†√î‚àè√® Error al generar PDF, usando fallback...', error);
+    // Retornar vac‚àö‚â†o si falla, el email se enviar‚àö¬∞ sin adjunto
     return '';
   }
 }
 
-// Funci√≥n gen√©rica para enviar emails con detecci√≥n autom√°tica de proveedor
+// Funci‚àö‚â•n gen‚àö¬©rica para enviar emails con detecci‚àö‚â•n autom‚àö¬∞tica de proveedor
 async function enviarEmailGenerico({ destinatario, cc, asunto, htmlBody, attachments }: { 
   destinatario: string; 
   cc?: string | null; 
@@ -1261,13 +1261,13 @@ async function enviarEmailGenerico({ destinatario, cc, asunto, htmlBody, attachm
   htmlBody: string;
   attachments?: Array<{ filename: string; content: string; encoding: string }>;
 }) {
-  // Log para diagn√≥stico (sin mostrar valores completos por seguridad)
+  // Log para diagn‚àö‚â•stico (sin mostrar valores completos por seguridad)
   const resendApiKey = Deno.env.get('RESEND_API_KEY');
   const sendgridApiKey = Deno.env.get('SENDGRID_API_KEY');
   const mailgunApiKey = Deno.env.get('MAILGUN_API_KEY');
   const emailFrom = Deno.env.get('EMAIL_FROM') || 'onboarding@resend.dev';
   
-  console.log('üîç Diagn√≥stico de variables de entorno:');
+  console.log('Ô£ø√º√Æ√ß Diagn‚àö‚â•stico de variables de entorno:');
   console.log(`  RESEND_API_KEY: ${resendApiKey ? `configurada (${resendApiKey.length} chars)` : 'NO CONFIGURADA'}`);
   console.log(`  SENDGRID_API_KEY: ${sendgridApiKey ? `configurada (${sendgridApiKey.length} chars)` : 'NO CONFIGURADA'}`);
   console.log(`  MAILGUN_API_KEY: ${mailgunApiKey ? `configurada (${mailgunApiKey.length} chars)` : 'NO CONFIGURADA'}`);
@@ -1277,21 +1277,21 @@ async function enviarEmailGenerico({ destinatario, cc, asunto, htmlBody, attachm
   // 1. Intentar con Resend (prioridad 1) - Usando SDK oficial
   if (resendApiKey) {
     try {
-      console.log('üìß Intentando enviar con Resend API...');
+      console.log('Ô£ø√º√¨√ü Intentando enviar con Resend API...');
       
       // Validar y corregir el dominio del remitente
       let fromEmail = emailFrom;
       
-      // Si el dominio no es resend.dev y es un dominio com√∫n no verificado, usar el por defecto
+      // Si el dominio no es resend.dev y es un dominio com‚àö‚à´n no verificado, usar el por defecto
       const commonUnverifiedDomains = ['gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com'];
       const domain = fromEmail.split('@')[1]?.toLowerCase();
       
       if (domain && commonUnverifiedDomains.includes(domain)) {
-        console.log(`‚ö†Ô∏è El dominio ${domain} no est√° verificado en Resend. Usando dominio por defecto.`);
+        console.log(`‚Äö√∂‚Ä†√î‚àè√® El dominio ${domain} no est‚àö¬∞ verificado en Resend. Usando dominio por defecto.`);
         fromEmail = 'onboarding@resend.dev';
       }
       
-      // Preparar payload seg√∫n API de Resend
+      // Preparar payload seg‚àö‚à´n API de Resend
       const resendBody: any = {
         from: fromEmail,
         to: [destinatario],
@@ -1312,7 +1312,7 @@ async function enviarEmailGenerico({ destinatario, cc, asunto, htmlBody, attachm
         }));
       }
       
-      console.log('üì§ Enviando con payload:', {
+      console.log('Ô£ø√º√¨¬ß Enviando con payload:', {
         from: resendBody.from,
         to: resendBody.to,
         subject: resendBody.subject,
@@ -1332,29 +1332,29 @@ async function enviarEmailGenerico({ destinatario, cc, asunto, htmlBody, attachm
       const result = await response.json();
       
       if (response.ok) {
-        console.log('‚úÖ Email enviado con Resend:', result);
+        console.log('‚Äö√∫√ñ Email enviado con Resend:', result);
         return { success: true, provider: 'Resend', messageId: result.id };
       } else {
-        console.log('‚ùå Error de Resend:', result);
+        console.log('‚Äö√π√• Error de Resend:', result);
         
         // Detectar error de dominio no verificado o modo sandbox
         const errorMsg = result.message || '';
         
         if (errorMsg.includes('domain is not verified') || errorMsg.includes('domain not found')) {
-          throw new Error(`El dominio del email remitente no est√° verificado en Resend. Por favor, verifica tu dominio en https://resend.com/domains o usa el dominio por defecto (onboarding@resend.dev).`);
+          throw new Error(`El dominio del email remitente no est‚àö¬∞ verificado en Resend. Por favor, verifica tu dominio en https://resend.com/domains o usa el dominio por defecto (onboarding@resend.dev).`);
         }
         
         // Detectar error de modo sandbox (solo puede enviar a email del propietario)
         if (errorMsg.includes('You can only send testing emails')) {
           const match = errorMsg.match(/\((.*?)\)/);
           const ownerEmail = match ? match[1] : 'tu email registrado';
-          throw new Error(`‚ö†Ô∏è MODO SANDBOX ACTIVO: Resend solo permite enviar emails a ${ownerEmail} hasta que verifiques un dominio en https://resend.com/domains`);
+          throw new Error(`‚Äö√∂‚Ä†√î‚àè√® MODO SANDBOX ACTIVO: Resend solo permite enviar emails a ${ownerEmail} hasta que verifiques un dominio en https://resend.com/domains`);
         }
         
         throw new Error(result.message || 'Error al enviar con Resend');
       }
     } catch (error) {
-      console.log('‚ö†Ô∏è Resend fall√≥, intentando siguiente proveedor...', error);
+      console.log('‚Äö√∂‚Ä†√î‚àè√® Resend fall‚àö‚â•, intentando siguiente proveedor...', error);
       console.error('Error completo de Resend:', error);
     }
   }
@@ -1362,7 +1362,7 @@ async function enviarEmailGenerico({ destinatario, cc, asunto, htmlBody, attachm
   // 2. Intentar con SendGrid (prioridad 2)
   if (sendgridApiKey) {
     try {
-      console.log('üìß Intentando enviar con SendGrid...');
+      console.log('Ô£ø√º√¨√ü Intentando enviar con SendGrid...');
       const sendgridBody: any = {
         personalizations: [{
           to: [{ email: destinatario }],
@@ -1399,15 +1399,15 @@ async function enviarEmailGenerico({ destinatario, cc, asunto, htmlBody, attachm
       });
       
       if (response.ok) {
-        console.log('‚úÖ Email enviado con SendGrid');
+        console.log('‚Äö√∫√ñ Email enviado con SendGrid');
         return { success: true, provider: 'SendGrid' };
       } else {
         const errorText = await response.text();
-        console.log('‚ùå Error de SendGrid:', errorText);
+        console.log('‚Äö√π√• Error de SendGrid:', errorText);
         throw new Error('Error al enviar con SendGrid');
       }
     } catch (error) {
-      console.log('‚ö†Ô∏è SendGrid fall√≥, intentando siguiente proveedor...', error);
+      console.log('‚Äö√∂‚Ä†√î‚àè√® SendGrid fall‚àö‚â•, intentando siguiente proveedor...', error);
     }
   }
   
@@ -1416,7 +1416,7 @@ async function enviarEmailGenerico({ destinatario, cc, asunto, htmlBody, attachm
   
   if (mailgunApiKey && mailgunDomain) {
     try {
-      console.log('üìß Intentando enviar con Mailgun...');
+      console.log('Ô£ø√º√¨√ü Intentando enviar con Mailgun...');
       
       const formData = new FormData();
       formData.append('from', emailFrom);
@@ -1447,25 +1447,25 @@ async function enviarEmailGenerico({ destinatario, cc, asunto, htmlBody, attachm
       const result = await response.json();
       
       if (response.ok) {
-        console.log('‚úÖ Email enviado con Mailgun:', result);
+        console.log('‚Äö√∫√ñ Email enviado con Mailgun:', result);
         return { success: true, provider: 'Mailgun', messageId: result.id };
       } else {
-        console.log('‚ùå Error de Mailgun:', result);
+        console.log('‚Äö√π√• Error de Mailgun:', result);
         throw new Error(result.message || 'Error al enviar con Mailgun');
       }
     } catch (error) {
-      console.log('‚ö†Ô∏è Mailgun fall√≥:', error);
+      console.log('‚Äö√∂‚Ä†√î‚àè√® Mailgun fall‚àö‚â•:', error);
     }
   }
   
-  // Si ninguno funcion√≥
+  // Si ninguno funcion‚àö‚â•
   return { 
     success: false, 
-    error: 'No hay ning√∫n servicio de email configurado o todos fallaron. Por favor, configura RESEND_API_KEY, SENDGRID_API_KEY, o MAILGUN_API_KEY en las variables de entorno.' 
+    error: 'No hay ning‚àö‚à´n servicio de email configurado o todos fallaron. Por favor, configura RESEND_API_KEY, SENDGRID_API_KEY, o MAILGUN_API_KEY en las variables de entorno.' 
   };
 }
 
-// Endpoint para verificar qu√© servicio de email est√° configurado
+// Endpoint para verificar qu‚àö¬© servicio de email est‚àö¬∞ configurado
 app.get('/verificar-email-config', async (c) => {
   try {
     const resendApiKey = Deno.env.get('RESEND_API_KEY');
@@ -1475,11 +1475,11 @@ app.get('/verificar-email-config', async (c) => {
     const emailFrom = Deno.env.get('EMAIL_FROM') || 'onboarding@resend.dev';
     
     // Log detallado para debugging
-    console.log('üîç DIAGN√ìSTICO COMPLETO DE EMAIL:');
-    console.log(`  RESEND_API_KEY: ${resendApiKey ? `‚úì configurada (${resendApiKey.length} chars, inicia con: ${resendApiKey.substring(0, 5)}...)` : '‚úó NO CONFIGURADA'}`);
-    console.log(`  SENDGRID_API_KEY: ${sendgridApiKey ? `‚úì configurada (${sendgridApiKey.length} chars)` : '‚úó NO CONFIGURADA'}`);
-    console.log(`  MAILGUN_API_KEY: ${mailgunApiKey ? `‚úì configurada (${mailgunApiKey.length} chars)` : '‚úó NO CONFIGURADA'}`);
-    console.log(`  MAILGUN_DOMAIN: ${mailgunDomain ? `‚úì configurado: ${mailgunDomain}` : '‚úó NO CONFIGURADO'}`);
+    console.log('Ô£ø√º√Æ√ß DIAGN‚àö√¨STICO COMPLETO DE EMAIL:');
+    console.log(`  RESEND_API_KEY: ${resendApiKey ? `‚Äö√∫√¨ configurada (${resendApiKey.length} chars, inicia con: ${resendApiKey.substring(0, 5)}...)` : '‚Äö√∫√≥ NO CONFIGURADA'}`);
+    console.log(`  SENDGRID_API_KEY: ${sendgridApiKey ? `‚Äö√∫√¨ configurada (${sendgridApiKey.length} chars)` : '‚Äö√∫√≥ NO CONFIGURADA'}`);
+    console.log(`  MAILGUN_API_KEY: ${mailgunApiKey ? `‚Äö√∫√¨ configurada (${mailgunApiKey.length} chars)` : '‚Äö√∫√≥ NO CONFIGURADA'}`);
+    console.log(`  MAILGUN_DOMAIN: ${mailgunDomain ? `‚Äö√∫√¨ configurado: ${mailgunDomain}` : '‚Äö√∫√≥ NO CONFIGURADO'}`);
     console.log(`  EMAIL_FROM: ${emailFrom}`);
     
     const servicios = {
@@ -1488,24 +1488,24 @@ app.get('/verificar-email-config', async (c) => {
       mailgun: !!(mailgunApiKey && mailgunDomain)
     };
     
-    console.log(`üìä Servicios detectados:`, servicios);
+    console.log(`Ô£ø√º√¨√§ Servicios detectados:`, servicios);
     
     let servicioActivo = null;
     if (servicios.resend) servicioActivo = 'Resend';
     else if (servicios.sendgrid) servicioActivo = 'SendGrid';
     else if (servicios.mailgun) servicioActivo = 'Mailgun';
     
-    console.log(`üéØ Servicio activo seleccionado: ${servicioActivo}`);
+    console.log(`Ô£ø√º√©√ò Servicio activo seleccionado: ${servicioActivo}`);
     
     const configured = servicioActivo !== null;
     
-    // Construir lista de servicios disponibles con capitalizaci√≥n correcta
+    // Construir lista de servicios disponibles con capitalizaci‚àö‚â•n correcta
     const serviciosDisponiblesList = [];
     if (servicios.resend) serviciosDisponiblesList.push('Resend');
     if (servicios.sendgrid) serviciosDisponiblesList.push('SendGrid');
     if (servicios.mailgun) serviciosDisponiblesList.push('Mailgun');
     
-    console.log(`‚úÖ Configurado: ${configured}, Servicios disponibles:`, serviciosDisponiblesList);
+    console.log(`‚Äö√∫√ñ Configurado: ${configured}, Servicios disponibles:`, serviciosDisponiblesList);
     
     // Detectar modo sandbox de Resend
     let sandboxMode = false;
@@ -1513,8 +1513,8 @@ app.get('/verificar-email-config', async (c) => {
     
     if (servicioActivo === 'Resend' && emailFrom === 'onboarding@resend.dev') {
       sandboxMode = true;
-      // Intentar detectar el email del propietario haciendo una petici√≥n de prueba
-      console.log('üîç Detectando modo sandbox de Resend...');
+      // Intentar detectar el email del propietario haciendo una petici‚àö‚â•n de prueba
+      console.log('Ô£ø√º√Æ√ß Detectando modo sandbox de Resend...');
     }
     
     return c.json({
@@ -1533,16 +1533,16 @@ app.get('/verificar-email-config', async (c) => {
       },
       message: configured 
         ? (sandboxMode 
-            ? `‚ö†Ô∏è Resend en MODO SANDBOX: Solo puedes enviar emails de prueba. Verifica un dominio en https://resend.com/domains para enviar a cualquier destinatario.`
+            ? `‚Äö√∂‚Ä†√î‚àè√® Resend en MODO SANDBOX: Solo puedes enviar emails de prueba. Verifica un dominio en https://resend.com/domains para enviar a cualquier destinatario.`
             : `Email configurado correctamente con ${servicioActivo}`)
-        : '‚ö†Ô∏è No hay ning√∫n servicio de email configurado. Si acabas de configurar las variables, espera 1-2 minutos y recarga la p√°gina para que el servidor actualice la configuraci√≥n.'
+        : '‚Äö√∂‚Ä†√î‚àè√® No hay ning‚àö‚à´n servicio de email configurado. Si acabas de configurar las variables, espera 1-2 minutos y recarga la p‚àö¬∞gina para que el servidor actualice la configuraci‚àö‚â•n.'
     });
   } catch (error) {
-    console.log('Error al verificar configuraci√≥n de email:', error);
+    console.log('Error al verificar configuraci‚àö‚â•n de email:', error);
     return c.json({
       configured: false,
       error: String(error),
-      message: 'Error al verificar la configuraci√≥n'
+      message: 'Error al verificar la configuraci‚àö‚â•n'
     }, 500);
   }
 });
@@ -1559,7 +1559,7 @@ app.post('/enviar-email-parte', async (c) => {
       });
     }
     
-    console.log('üìß Procesando env√≠o de parte de servicio...');
+    console.log('Ô£ø√º√¨√ü Procesando env‚àö‚â†o de parte de servicio...');
     console.log(`   Cliente: ${pedido?.cliente}`);
     console.log(`   Fecha: ${pedido?.fecha}`);
     
@@ -1574,21 +1574,21 @@ app.post('/enviar-email-parte', async (c) => {
         
         <div style="margin-top: 20px; padding: 20px; background: #f9fafb; border-radius: 8px;">
           <p style="color: #374151; font-size: 14px; text-align: center;">
-            üìé El parte de servicio se encuentra adjunto en formato PDF para su descarga.
+            Ô£ø√º√¨√© El parte de servicio se encuentra adjunto en formato PDF para su descarga.
           </p>
         </div>
         
         <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; text-align: center; color: #6b7280; font-size: 14px;">
-          <p><strong>Sistema de Gesti√≥n de Perfiles</strong></p>
+          <p><strong>Sistema de Gesti‚àö‚â•n de Perfiles</strong></p>
           <p>Parte de servicio para: ${pedido.cliente}</p>
           <p>Fecha: ${pedido.fecha} | Lugar: ${pedido.lugar}</p>
-          <p>Email generado autom√°ticamente - No responder</p>
+          <p>Email generado autom‚àö¬∞ticamente - No responder</p>
         </div>
       </div>
     `;
     
     // Generar PDF del parte de servicio
-    console.log('üìÑ Generando PDF del parte de servicio...');
+    console.log('Ô£ø√º√¨√ë Generando PDF del parte de servicio...');
     const pdfBase64 = await generarPDFParte(pedido, parteHTML);
     
     // Preparar adjuntos si hay PDF
@@ -1600,13 +1600,13 @@ app.post('/enviar-email-parte', async (c) => {
         content: pdfBase64,
         encoding: 'base64'
       });
-      console.log(`‚úÖ PDF generado exitosamente: ${nombreArchivo} (${Math.round(pdfBase64.length / 1024)} KB)`);
+      console.log(`‚Äö√∫√ñ PDF generado exitosamente: ${nombreArchivo} (${Math.round(pdfBase64.length / 1024)} KB)`);
     } else {
-      console.log('‚ö†Ô∏è No se pudo generar el PDF, el email se enviar√° sin adjunto');
+      console.log('‚Äö√∂‚Ä†√î‚àè√® No se pudo generar el PDF, el email se enviar‚àö¬∞ sin adjunto');
     }
     
-    // Enviar usando la funci√≥n gen√©rica
-    console.log('üì§ Enviando email...');
+    // Enviar usando la funci‚àö‚â•n gen‚àö¬©rica
+    console.log('Ô£ø√º√¨¬ß Enviando email...');
     const result = await enviarEmailGenerico({
       destinatario,
       cc,
@@ -1616,12 +1616,12 @@ app.post('/enviar-email-parte', async (c) => {
     });
     
     if (result.success) {
-      console.log(`‚úÖ Email enviado exitosamente con ${attachments.length} adjunto(s)`);
+      console.log(`‚Äö√∫√ñ Email enviado exitosamente con ${attachments.length} adjunto(s)`);
     }
     
     return c.json(result);
   } catch (error) {
-    console.log('‚ùå Error al enviar email:', error);
+    console.log('‚Äö√π√• Error al enviar email:', error);
     return c.json({ 
       success: false, 
       error: String(error) 
@@ -1629,7 +1629,7 @@ app.post('/enviar-email-parte', async (c) => {
   }
 });
 
-// ============== VERIFICAR CONFIGURACI√ìN DE WHATSAPP ==============
+// ============== VERIFICAR CONFIGURACI‚àö√¨N DE WHATSAPP ==============
 app.get('/verificar-whatsapp-config', async (c) => {
   try {
     const whatsappApiKey = Deno.env.get('WHATSAPP_API_KEY');
@@ -1640,12 +1640,12 @@ app.get('/verificar-whatsapp-config', async (c) => {
         configured: false,
         hasToken: !!whatsappApiKey,
         phoneId: !!whatsappPhoneId,
-        message: 'WhatsApp Business API no est√° configurado. Necesitas configurar WHATSAPP_API_KEY y WHATSAPP_PHONE_ID en las variables de entorno.',
+        message: 'WhatsApp Business API no est‚àö¬∞ configurado. Necesitas configurar WHATSAPP_API_KEY y WHATSAPP_PHONE_ID en las variables de entorno.',
         configSource: 'environment'
       });
     }
     
-    // üö® VALIDACI√ìN CR√çTICA: Detectar si el token es sospechosamente corto
+    // Ô£ø√º√∂¬Æ VALIDACI‚àö√¨N CR‚àö√ßTICA: Detectar si el token es sospechosamente corto
     if (whatsappApiKey.length < 100) {
       return c.json({
         configured: false,
@@ -1653,21 +1653,21 @@ app.get('/verificar-whatsapp-config', async (c) => {
         phoneId: true,
         tokenLength: whatsappApiKey.length,
         suspiciousToken: true,
-        message: '‚ö†Ô∏è ERROR: El WHATSAPP_API_KEY es demasiado corto. Un token v√°lido debe tener m√°s de 200 caracteres. Es posible que hayas usado el Phone ID como token.',
-        detail: `Token actual: ${whatsappApiKey.length} caracteres. Token v√°lido: 200+ caracteres. El Phone ID es DIFERENTE del API Key.`,
+        message: '‚Äö√∂‚Ä†√î‚àè√® ERROR: El WHATSAPP_API_KEY es demasiado corto. Un token v‚àö¬∞lido debe tener m‚àö¬∞s de 200 caracteres. Es posible que hayas usado el Phone ID como token.',
+        detail: `Token actual: ${whatsappApiKey.length} caracteres. Token v‚àö¬∞lido: 200+ caracteres. El Phone ID es DIFERENTE del API Key.`,
         configSource: 'environment'
       });
     }
     
-    // Verificar si el token y phone ID son iguales (error com√∫n)
+    // Verificar si el token y phone ID son iguales (error com‚àö‚à´n)
     if (whatsappApiKey === whatsappPhoneId) {
       return c.json({
         configured: false,
         hasToken: true,
         phoneId: true,
         duplicateValues: true,
-        message: '‚ö†Ô∏è ERROR: WHATSAPP_API_KEY y WHATSAPP_PHONE_ID tienen el mismo valor. Son dos credenciales DIFERENTES.',
-        detail: 'El Phone ID es un n√∫mero corto (15 d√≠gitos). El API Key es un token largo (200+ caracteres que empieza con "EAA...").',
+        message: '‚Äö√∂‚Ä†√î‚àè√® ERROR: WHATSAPP_API_KEY y WHATSAPP_PHONE_ID tienen el mismo valor. Son dos credenciales DIFERENTES.',
+        detail: 'El Phone ID es un n‚àö‚à´mero corto (15 d‚àö‚â†gitos). El API Key es un token largo (200+ caracteres que empieza con "EAA...").',
         configSource: 'environment'
       });
     }
@@ -1681,11 +1681,11 @@ app.get('/verificar-whatsapp-config', async (c) => {
       configSource: 'environment'
     });
   } catch (error) {
-    console.log('Error al verificar configuraci√≥n WhatsApp:', error);
+    console.log('Error al verificar configuraci‚àö‚â•n WhatsApp:', error);
     return c.json({
       configured: false,
       error: String(error),
-      message: 'Error al verificar la configuraci√≥n'
+      message: 'Error al verificar la configuraci‚àö‚â•n'
     }, 500);
   }
 });
@@ -1709,7 +1709,7 @@ app.post('/enviar-whatsapp', async (c) => {
       return c.json({
         success: false,
         needsConfiguration: true,
-        error: 'WhatsApp Business API no est√° configurado',
+        error: 'WhatsApp Business API no est‚àö¬∞ configurado',
         debugInfo: {
           configSource: 'environment',
           tokenLength: whatsappApiKey ? whatsappApiKey.length : 0,
@@ -1718,15 +1718,15 @@ app.post('/enviar-whatsapp', async (c) => {
       });
     }
     
-    // Limpiar n√∫mero de tel√©fono (remover espacios, guiones, etc.)
+    // Limpiar n‚àö‚à´mero de tel‚àö¬©fono (remover espacios, guiones, etc.)
     let numeroLimpio = telefono.replace(/\D/g, '');
     
-    // Si el n√∫mero tiene 9 d√≠gitos, agregar prefijo de Espa√±a (34)
+    // Si el n‚àö‚à´mero tiene 9 d‚àö‚â†gitos, agregar prefijo de Espa‚àö¬±a (34)
     if (numeroLimpio.length === 9) {
       numeroLimpio = '34' + numeroLimpio;
     }
     
-    console.log(`üì± Enviando WhatsApp a ${numeroLimpio}`);
+    console.log(`Ô£ø√º√¨¬± Enviando WhatsApp a ${numeroLimpio}`);
     
     // Enviar mensaje usando WhatsApp Business API
     const response = await fetch(`https://graph.facebook.com/v18.0/${whatsappPhoneId}/messages`, {
@@ -1748,11 +1748,11 @@ app.post('/enviar-whatsapp', async (c) => {
     const result = await response.json();
     
     if (!response.ok) {
-      console.log('‚ùå Error de WhatsApp API:', result);
+      console.log('‚Äö√π√• Error de WhatsApp API:', result);
       return c.json({
         success: false,
         error: result.error?.message || 'Error al enviar mensaje por WhatsApp',
-        needsConfiguration: result.error?.code === 190, // Token inv√°lido
+        needsConfiguration: result.error?.code === 190, // Token inv‚àö¬∞lido
         debugInfo: {
           httpStatus: response.status,
           whatsappError: result.error,
@@ -1763,7 +1763,7 @@ app.post('/enviar-whatsapp', async (c) => {
       });
     }
     
-    console.log('‚úÖ WhatsApp enviado exitosamente:', result);
+    console.log('‚Äö√∫√ñ WhatsApp enviado exitosamente:', result);
     return c.json({
       success: true,
       messageId: result.messages?.[0]?.id,
@@ -1771,7 +1771,7 @@ app.post('/enviar-whatsapp', async (c) => {
     });
     
   } catch (error) {
-    console.log('‚ùå Error al enviar WhatsApp:', error);
+    console.log('‚Äö√π√• Error al enviar WhatsApp:', error);
     return c.json({
       success: false,
       error: String(error)
@@ -1835,7 +1835,7 @@ import {
   formatOptions
 } from './chatbot-flow.ts';
 
-// Webhook de verificaci√≥n de WhatsApp
+// Webhook de verificaci‚àö‚â•n de WhatsApp
 app.get('/whatsapp-webhook', async (c) => {
   try {
     const mode = c.req.query('hub.mode');
@@ -1845,14 +1845,14 @@ app.get('/whatsapp-webhook', async (c) => {
     const verifyToken = Deno.env.get('WHATSAPP_VERIFY_TOKEN');
 
     if (mode === 'subscribe' && token === verifyToken) {
-      console.log('‚úÖ Webhook verificado correctamente');
+      console.log('‚Äö√∫√ñ Webhook verificado correctamente');
       return c.text(challenge || '');
     } else {
-      console.error('‚ùå Verificaci√≥n fallida');
-      return c.json({ error: 'Token inv√°lido' }, 403);
+      console.error('‚Äö√π√• Verificaci‚àö‚â•n fallida');
+      return c.json({ error: 'Token inv‚àö¬∞lido' }, 403);
     }
   } catch (error) {
-    console.error('Error en verificaci√≥n de webhook:', error);
+    console.error('Error en verificaci‚àö‚â•n de webhook:', error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
@@ -1861,31 +1861,31 @@ app.get('/whatsapp-webhook', async (c) => {
 app.post('/whatsapp-webhook', async (c) => {
   try {
     const body = await c.req.json();
-    console.log('üì± Mensaje recibido de WhatsApp:', JSON.stringify(body, null, 2));
+    console.log('Ô£ø√º√¨¬± Mensaje recibido de WhatsApp:', JSON.stringify(body, null, 2));
 
-    // Extraer informaci√≥n del mensaje
+    // Extraer informaci‚àö‚â•n del mensaje
     const entry = body.entry?.[0];
     const changes = entry?.changes?.[0];
     const value = changes?.value;
     const messages = value?.messages;
 
     if (!messages || messages.length === 0) {
-      console.log('‚ÑπÔ∏è Webhook recibido pero sin mensajes (puede ser notificaci√≥n de estado)');
+      console.log('‚Äö√ëœÄ√î‚àè√® Webhook recibido pero sin mensajes (puede ser notificaci‚àö‚â•n de estado)');
       return c.json({ success: true, message: 'No hay mensajes para procesar' });
     }
 
     const message = messages[0];
-    const from = message.from; // N√∫mero de tel√©fono del usuario
+    const from = message.from; // N‚àö‚à´mero de tel‚àö¬©fono del usuario
     const messageText = message.text?.body || '';
     const messageId = message.id;
 
-    console.log(`üì® Mensaje de ${from}: "${messageText}"`);
+    console.log(`Ô£ø√º√¨¬Æ Mensaje de ${from}: "${messageText}"`);
 
-    // Obtener o crear el estado de la conversaci√≥n
+    // Obtener o crear el estado de la conversaci‚àö‚â•n
     let state: ConversationState | null = await kv.get(`conversation:${from}`);
 
     if (!state || messageText.toLowerCase() === 'menu' || messageText.toLowerCase() === 'inicio') {
-      // Nueva conversaci√≥n o reseteo
+      // Nueva conversaci‚àö‚â•n o reseteo
       state = {
         userId: from,
         phone: from,
@@ -1904,24 +1904,24 @@ app.post('/whatsapp-webhook', async (c) => {
       }
 
       await sendWhatsAppMessage(from, responseText);
-      return c.json({ success: true, message: 'Conversaci√≥n iniciada' });
+      return c.json({ success: true, message: 'Conversaci‚àö‚â•n iniciada' });
     }
 
     // Procesar la respuesta del usuario
     const currentStep = CHATBOT_FLOW[state.currentStep];
     
     if (!currentStep) {
-      console.error(`‚ùå Paso no encontrado: ${state.currentStep}`);
-      await sendWhatsAppMessage(from, '‚ö†Ô∏è Ha ocurrido un error. Escribe "menu" para reiniciar.');
+      console.error(`‚Äö√π√• Paso no encontrado: ${state.currentStep}`);
+      await sendWhatsAppMessage(from, '‚Äö√∂‚Ä†√î‚àè√® Ha ocurrido un error. Escribe "menu" para reiniciar.');
       return c.json({ success: false, error: 'Paso no encontrado' });
     }
 
     const result = processUserResponse(messageText, currentStep, state);
 
     if (result.error) {
-      // Error de validaci√≥n
+      // Error de validaci‚àö‚â•n
       await sendWhatsAppMessage(from, result.error);
-      return c.json({ success: true, message: 'Error de validaci√≥n enviado' });
+      return c.json({ success: true, message: 'Error de validaci‚àö‚â•n enviado' });
     }
 
     // Actualizar el estado con los nuevos datos
@@ -1945,7 +1945,7 @@ app.post('/whatsapp-webhook', async (c) => {
         await sendWhatsAppMessage(from, responseText);
       }
 
-      // Resetear la conversaci√≥n
+      // Resetear la conversaci‚àö‚â•n
       await kv.del(`conversation:${from}`);
       return c.json({ success: true, message: 'Flujo completado' });
     }
@@ -1953,8 +1953,8 @@ app.post('/whatsapp-webhook', async (c) => {
     const nextStep = CHATBOT_FLOW[nextStepId];
 
     if (!nextStep) {
-      console.error(`‚ùå Siguiente paso no encontrado: ${nextStepId}`);
-      await sendWhatsAppMessage(from, '‚ö†Ô∏è Ha ocurrido un error. Escribe "menu" para reiniciar.');
+      console.error(`‚Äö√π√• Siguiente paso no encontrado: ${nextStepId}`);
+      await sendWhatsAppMessage(from, '‚Äö√∂‚Ä†√î‚àè√® Ha ocurrido un error. Escribe "menu" para reiniciar.');
       return c.json({ success: false, error: 'Siguiente paso no encontrado' });
     }
 
@@ -1968,11 +1968,11 @@ app.post('/whatsapp-webhook', async (c) => {
       const mapsResults = await searchGoogleMaps(query);
       state.mapsResults = mapsResults;
       
-      // Pasar autom√°ticamente al siguiente paso (confirmaci√≥n de ubicaci√≥n)
+      // Pasar autom‚àö¬∞ticamente al siguiente paso (confirmaci‚àö‚â•n de ubicaci‚àö‚â•n)
       state.currentStep = nextStep.next || 'menu_inicial';
       await kv.set(`conversation:${from}`, state);
 
-      // Enviar las opciones de ubicaci√≥n
+      // Enviar las opciones de ubicaci‚àö‚â•n
       const confirmStep = CHATBOT_FLOW[state.currentStep];
       let responseText = confirmStep.text + '\n\n';
       mapsResults.forEach((result, idx) => {
@@ -1980,7 +1980,7 @@ app.post('/whatsapp-webhook', async (c) => {
       });
 
       await sendWhatsAppMessage(from, responseText);
-      return c.json({ success: true, message: 'B√∫squeda de Maps completada' });
+      return c.json({ success: true, message: 'B‚àö‚à´squeda de Maps completada' });
     }
 
     // Guardar el estado actualizado
@@ -1998,18 +1998,18 @@ app.post('/whatsapp-webhook', async (c) => {
     return c.json({ success: true, message: 'Mensaje procesado' });
 
   } catch (error) {
-    console.error('‚ùå Error procesando webhook de WhatsApp:', error);
+    console.error('‚Äö√π√• Error procesando webhook de WhatsApp:', error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
 
-// Funci√≥n auxiliar para enviar mensajes de WhatsApp
+// Funci‚àö‚â•n auxiliar para enviar mensajes de WhatsApp
 async function sendWhatsAppMessage(to: string, message: string): Promise<void> {
   const phoneId = Deno.env.get('WHATSAPP_PHONE_ID');
   const apiKey = Deno.env.get('WHATSAPP_API_KEY');
 
   if (!phoneId || !apiKey) {
-    console.error('‚ùå WhatsApp no configurado');
+    console.error('‚Äö√π√• WhatsApp no configurado');
     return;
   }
 
@@ -2033,24 +2033,24 @@ async function sendWhatsAppMessage(to: string, message: string): Promise<void> {
     const result = await response.json();
     
     if (response.ok) {
-      console.log('‚úÖ Mensaje de WhatsApp enviado:', result);
+      console.log('‚Äö√∫√ñ Mensaje de WhatsApp enviado:', result);
     } else {
-      console.error('‚ùå Error enviando mensaje de WhatsApp:', result);
+      console.error('‚Äö√π√• Error enviando mensaje de WhatsApp:', result);
     }
   } catch (error) {
-    console.error('‚ùå Error en sendWhatsAppMessage:', error);
+    console.error('‚Äö√π√• Error en sendWhatsAppMessage:', error);
   }
 }
 
-// Funci√≥n para buscar ubicaciones en Google Maps
+// Funci‚àö‚â•n para buscar ubicaciones en Google Maps
 async function searchGoogleMaps(query: string): Promise<Array<{ name: string; url: string }>> {
   try {
-    // Crear URL de b√∫squeda de Google Maps
+    // Crear URL de b‚àö‚à´squeda de Google Maps
     const baseUrl = 'https://www.google.com/maps/search/';
     const encodedQuery = encodeURIComponent(query);
     const mapsUrl = `${baseUrl}?api=1&query=${encodedQuery}`;
 
-    // Retornar resultado √∫nico (podr√≠amos integrar con la API de Google Places en el futuro)
+    // Retornar resultado ‚àö‚à´nico (podr‚àö‚â†amos integrar con la API de Google Places en el futuro)
     return [
       {
         name: query,
@@ -2058,7 +2058,7 @@ async function searchGoogleMaps(query: string): Promise<Array<{ name: string; ur
       }
     ];
   } catch (error) {
-    console.error('‚ùå Error buscando en Google Maps:', error);
+    console.error('‚Äö√π√• Error buscando en Google Maps:', error);
     return [
       {
         name: query,
@@ -2068,16 +2068,16 @@ async function searchGoogleMaps(query: string): Promise<Array<{ name: string; ur
   }
 }
 
-// Funci√≥n para crear un pedido desde WhatsApp
+// Funci‚àö‚â•n para crear un pedido desde WhatsApp
 async function crearPedidoDesdeWhatsApp(data: Record<string, any>, phone: string): Promise<void> {
   try {
-    console.log('üìù Creando pedido desde WhatsApp:', data);
+    console.log('Ô£ø√º√¨√π Creando pedido desde WhatsApp:', data);
 
     // Convertir fecha de DD/MM/AAAA a AAAA-MM-DD
     const [day, month, year] = data.fecha_evento.split('/');
     const fechaISO = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
 
-    // Generar n√∫mero de pedido
+    // Generar n‚àö‚à´mero de pedido
     const pedidos = await kv.getByPrefix('pedido:');
     const numeros = pedidos.map((p: any) => {
       const match = p.numero?.match(/PED(\d+)/);
@@ -2105,14 +2105,14 @@ async function crearPedidoDesdeWhatsApp(data: Record<string, any>, phone: string
       totalHoras2: '',
       catering: 'no',
       camisa: data.color_camisa || 'negra',
-      notas: `Pedido creado v√≠a WhatsApp\nüì± Tel√©fono: ${data.telefono_contacto}\nüìß Email: ${data.mail_contacto}\n\nOrigen: ${phone}`,
+      notas: `Pedido creado v‚àö‚â†a WhatsApp\nÔ£ø√º√¨¬± Tel‚àö¬©fono: ${data.telefono_contacto}\nÔ£ø√º√¨√ü Email: ${data.mail_contacto}\n\nOrigen: ${phone}`,
       coordinadorId: '',
       coordinadorNombre: '',
       asignaciones: []
     };
 
     await kv.set(pedidoId, pedido);
-    console.log('‚úÖ Pedido creado exitosamente:', numeroPedido);
+    console.log('‚Äö√∫√ñ Pedido creado exitosamente:', numeroPedido);
 
     // Crear cliente si no existe
     const clientes = await kv.getByPrefix('cliente:');
@@ -2128,11 +2128,11 @@ async function crearPedidoDesdeWhatsApp(data: Record<string, any>, phone: string
         direccion: data.lugar_evento
       };
       await kv.set(clienteId, cliente);
-      console.log('‚úÖ Cliente creado:', data.cliente);
+      console.log('‚Äö√∫√ñ Cliente creado:', data.cliente);
     }
 
   } catch (error) {
-    console.error('‚ùå Error creando pedido desde WhatsApp:', error);
+    console.error('‚Äö√π√• Error creando pedido desde WhatsApp:', error);
   }
 }
 
@@ -2140,7 +2140,7 @@ async function crearPedidoDesdeWhatsApp(data: Record<string, any>, phone: string
 app.delete('/limpiar-datos', requireSecret, async (c) => {
   try {
     const { categorias } = await c.req.json();
-    console.log('üßπ Iniciando limpieza de datos:', categorias);
+    console.log('Ô£ø√º√üœÄ Iniciando limpieza de datos:', categorias);
 
     const resultados: any = {
       success: true,
@@ -2154,7 +2154,7 @@ app.delete('/limpiar-datos', requireSecret, async (c) => {
         await kv.del(pedido.id);
       }
       resultados.eliminados.pedidos = pedidos.length;
-      console.log(`   ‚úÖ Eliminados ${pedidos.length} pedidos`);
+      console.log(`   ‚Äö√∫√ñ Eliminados ${pedidos.length} pedidos`);
     }
 
     // Limpiar chats grupales
@@ -2164,7 +2164,7 @@ app.delete('/limpiar-datos', requireSecret, async (c) => {
         await db.eliminarChat(supabase, chat.id);
       }
       resultados.eliminados.chats = chats.length;
-      console.log(`   ‚úÖ Eliminados ${chats.length} chats grupales`);
+      console.log(`   ‚Äö√∫√ñ Eliminados ${chats.length} chats grupales`);
     }
 
     // Limpiar mensajes de chats
@@ -2174,7 +2174,7 @@ app.delete('/limpiar-datos', requireSecret, async (c) => {
         await kv.del(mensaje.id);
       }
       resultados.eliminados.mensajes = mensajes.length;
-      console.log(`   ‚úÖ Eliminados ${mensajes.length} mensajes de chats`);
+      console.log(`   ‚Äö√∫√ñ Eliminados ${mensajes.length} mensajes de chats`);
     }
 
     // Limpiar conversaciones de chatbot
@@ -2184,22 +2184,22 @@ app.delete('/limpiar-datos', requireSecret, async (c) => {
         await kv.del(conv.id);
       }
       resultados.eliminados.conversaciones = conversaciones.length;
-      console.log(`   ‚úÖ Eliminadas ${conversaciones.length} conversaciones de chatbot`);
+      console.log(`   ‚Äö√∫√ñ Eliminadas ${conversaciones.length} conversaciones de chatbot`);
     }
 
-    console.log('‚úÖ Limpieza completada:', resultados.eliminados);
+    console.log('‚Äö√∫√ñ Limpieza completada:', resultados.eliminados);
     return c.json(resultados);
 
   } catch (error) {
-    console.error('‚ùå Error en limpieza de datos:', error);
+    console.error('‚Äö√π√• Error en limpieza de datos:', error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
 
-// ============== DIAGN√ìSTICO DE WHATSAPP ==============
-// Endpoint para diagnosticar configuraci√≥n de WhatsApp
+// ============== DIAGN‚àö√¨STICO DE WHATSAPP ==============
+// Endpoint para diagnosticar configuraci‚àö‚â•n de WhatsApp
 app.get('/diagnostico-whatsapp', async (c) => {
-  console.log('üîç Ejecutando diagn√≥stico de WhatsApp...');
+  console.log('Ô£ø√º√Æ√ß Ejecutando diagn‚àö‚â•stico de WhatsApp...');
   
   const whatsappApiKey = Deno.env.get('WHATSAPP_API_KEY');
   const whatsappPhoneId = Deno.env.get('WHATSAPP_PHONE_ID');
@@ -2214,40 +2214,40 @@ app.get('/diagnostico-whatsapp', async (c) => {
     timestamp: new Date().toISOString()
   };
   
-  console.log('üìä Resultado del diagn√≥stico:', diagnostico);
+  console.log('Ô£ø√º√¨√§ Resultado del diagn‚àö‚â•stico:', diagnostico);
   
   return c.json(diagnostico);
 });
 
-// ============== ENV√çOS - MENSAJES GRUPALES ==============
-// Enviar mensaje de confirmaci√≥n a todos los camareros asignados a un evento
+// ============== ENV‚àö√ßOS - MENSAJES GRUPALES ==============
+// Enviar mensaje de confirmaci‚àö‚â•n a todos los camareros asignados a un evento
 app.post('/enviar-mensaje-grupal', async (c) => {
   try {
     const { pedidoId, mensaje } = await c.req.json();
-    console.log('üì§ Enviando mensaje grupal para pedido:', pedidoId);
+    console.log('Ô£ø√º√¨¬ß Enviando mensaje grupal para pedido:', pedidoId);
     
     const pedido = await kv.get(pedidoId);
     if (!pedido) {
-      console.log('‚ùå Pedido no encontrado:', pedidoId);
+      console.log('‚Äö√π√• Pedido no encontrado:', pedidoId);
       return c.json({ success: false, error: 'Pedido no encontrado' });
     }
     
     const asignaciones = pedido.asignaciones || [];
     if (asignaciones.length === 0) {
-      console.log('‚ùå No hay camareros asignados al pedido');
+      console.log('‚Äö√π√• No hay camareros asignados al pedido');
       return c.json({ success: false, error: 'No hay camareros asignados' });
     }
     
     const whatsappApiKey = Deno.env.get('WHATSAPP_API_KEY');
     const whatsappPhoneId = Deno.env.get('WHATSAPP_PHONE_ID');
     
-    console.log('üîç Verificando configuraci√≥n de WhatsApp...');
-    console.log('   WHATSAPP_API_KEY:', whatsappApiKey ? `‚úÖ Configurado (${whatsappApiKey.substring(0, 10)}...)` : '‚ùå No configurado');
-    console.log('   WHATSAPP_PHONE_ID:', whatsappPhoneId ? `‚úÖ Configurado (${whatsappPhoneId})` : '‚ùå No configurado');
+    console.log('Ô£ø√º√Æ√ß Verificando configuraci‚àö‚â•n de WhatsApp...');
+    console.log('   WHATSAPP_API_KEY:', whatsappApiKey ? `‚Äö√∫√ñ Configurado (${whatsappApiKey.substring(0, 10)}...)` : '‚Äö√π√• No configurado');
+    console.log('   WHATSAPP_PHONE_ID:', whatsappPhoneId ? `‚Äö√∫√ñ Configurado (${whatsappPhoneId})` : '‚Äö√π√• No configurado');
     
     if (!whatsappApiKey || !whatsappPhoneId) {
       const errorMsg = `WhatsApp no configurado correctamente. Faltan: ${!whatsappApiKey ? 'WHATSAPP_API_KEY ' : ''}${!whatsappPhoneId ? 'WHATSAPP_PHONE_ID' : ''}`;
-      console.log('‚ùå', errorMsg);
+      console.log('‚Äö√π√•', errorMsg);
       return c.json({ success: false, error: errorMsg });
     }
     
@@ -2260,23 +2260,23 @@ app.post('/enviar-mensaje-grupal', async (c) => {
         const camarero = await kv.get(asignacion.camareroId);
         
         if (!camarero || !camarero.telefono) {
-          console.log(`‚ö†Ô∏è Camarero ${asignacion.camareroNombre} sin tel√©fono`);
+          console.log(`‚Äö√∂‚Ä†√î‚àè√® Camarero ${asignacion.camareroNombre} sin tel‚àö¬©fono`);
           fallidos++;
           resultados.push({ 
             camarero: asignacion.camareroNombre,
             exito: false,
-            error: 'Sin tel√©fono registrado'
+            error: 'Sin tel‚àö¬©fono registrado'
           });
           continue;
         }
         
-        // Limpiar n√∫mero de tel√©fono
+        // Limpiar n‚àö‚à´mero de tel‚àö¬©fono
         let numeroLimpio = camarero.telefono.replace(/\D/g, '');
         if (numeroLimpio.length === 9) {
           numeroLimpio = '34' + numeroLimpio;
         }
         
-        console.log(`üì± Enviando a ${camarero.nombre} ${camarero.apellido} - Tel: ${numeroLimpio}`);
+        console.log(`Ô£ø√º√¨¬± Enviando a ${camarero.nombre} ${camarero.apellido} - Tel: ${numeroLimpio}`);
         
         // Enviar mensaje por WhatsApp
         const response = await fetch(`https://graph.facebook.com/v18.0/${whatsappPhoneId}/messages`, {
@@ -2298,7 +2298,7 @@ app.post('/enviar-mensaje-grupal', async (c) => {
         const result = await response.json();
         
         if (response.ok) {
-          console.log(`‚úÖ Mensaje enviado a ${camarero.nombre} ${camarero.apellido}`);
+          console.log(`‚Äö√∫√ñ Mensaje enviado a ${camarero.nombre} ${camarero.apellido}`);
           exitosos++;
           resultados.push({ 
             camarero: `${camarero.nombre} ${camarero.apellido}`,
@@ -2307,12 +2307,12 @@ app.post('/enviar-mensaje-grupal', async (c) => {
           });
         } else {
           const errorDetalle = result.error?.message || JSON.stringify(result.error) || 'Error desconocido de WhatsApp API';
-          console.log(`‚ùå Error enviando a ${camarero.nombre}: ${errorDetalle}`);
+          console.log(`‚Äö√π√• Error enviando a ${camarero.nombre}: ${errorDetalle}`);
           
           // Detectar si es error de lista permitida (modo desarrollo)
           let errorMostrar = errorDetalle;
           if (errorDetalle.includes('not in allowed list') || errorDetalle.includes('#131030')) {
-            errorMostrar = 'Tu cuenta de WhatsApp est√° en modo desarrollo. Agrega este n√∫mero a la lista permitida en Meta Business.';
+            errorMostrar = 'Tu cuenta de WhatsApp est‚àö¬∞ en modo desarrollo. Agrega este n‚àö‚à´mero a la lista permitida en Meta Business.';
           }
           
           fallidos++;
@@ -2324,7 +2324,7 @@ app.post('/enviar-mensaje-grupal', async (c) => {
           });
         }
       } catch (error) {
-        console.log(`‚ùå Error procesando camarero ${asignacion.camareroNombre}:`, error);
+        console.log(`‚Äö√π√• Error procesando camarero ${asignacion.camareroNombre}:`, error);
         fallidos++;
         resultados.push({ 
           camarero: asignacion.camareroNombre,
@@ -2334,29 +2334,29 @@ app.post('/enviar-mensaje-grupal', async (c) => {
       }
     }
     
-    console.log(`üìä Resumen: ${exitosos} exitosos, ${fallidos} fallidos`);
-    console.log('üìã Detalles:', JSON.stringify(resultados, null, 2));
+    console.log(`Ô£ø√º√¨√§ Resumen: ${exitosos} exitosos, ${fallidos} fallidos`);
+    console.log('Ô£ø√º√¨√£ Detalles:', JSON.stringify(resultados, null, 2));
     
     // Si no hubo exitosos, devolver error detallado
     if (exitosos === 0 && fallidos > 0) {
-      const primerError = resultados.find(r => !r.exito)?.error || 'Todos los env√≠os fallaron';
+      const primerError = resultados.find(r => !r.exito)?.error || 'Todos los env‚àö‚â†os fallaron';
       
       // Detectar tipo de error predominante
       const hayErroresWhatsApp = resultados.some(r => !r.exito && (r.error.includes('modo desarrollo') || r.error.includes('#131030') || r.error.includes('not in allowed list')));
-      const hayErroresTelefono = resultados.some(r => !r.exito && r.error.includes('Sin tel√©fono'));
+      const hayErroresTelefono = resultados.some(r => !r.exito && r.error.includes('Sin tel‚àö¬©fono'));
       
       let mensajeError = primerError;
       if (hayErroresWhatsApp && hayErroresTelefono) {
-        mensajeError = `M√∫ltiples errores: WhatsApp en modo desarrollo y perfiles sin tel√©fono. ${primerError}`;
+        mensajeError = `M‚àö‚à´ltiples errores: WhatsApp en modo desarrollo y perfiles sin tel‚àö¬©fono. ${primerError}`;
       } else if (hayErroresWhatsApp) {
-        mensajeError = `#131030 - WhatsApp en modo desarrollo. Agrega los n√∫meros a la lista permitida o actualiza a producci√≥n.`;
+        mensajeError = `#131030 - WhatsApp en modo desarrollo. Agrega los n‚àö‚à´meros a la lista permitida o actualiza a producci‚àö‚â•n.`;
       } else if (hayErroresTelefono) {
-        mensajeError = `Algunos perfiles no tienen tel√©fono registrado. Actual√≠zalos en la secci√≥n Personal.`;
+        mensajeError = `Algunos perfiles no tienen tel‚àö¬©fono registrado. Actual‚àö‚â†zalos en la secci‚àö‚â•n Personal.`;
       }
       
       return c.json({ 
         success: false,
-        error: `No se pudo enviar a ning√∫n camarero. ${mensajeError}`,
+        error: `No se pudo enviar a ning‚àö‚à´n camarero. ${mensajeError}`,
         exitosos: 0,
         fallidos,
         total: asignaciones.length,
@@ -2372,49 +2372,49 @@ app.post('/enviar-mensaje-grupal', async (c) => {
       resultados
     });
   } catch (error) {
-    console.log('‚ùå Error al enviar mensaje grupal:', error);
+    console.log('‚Äö√π√• Error al enviar mensaje grupal:', error);
     return c.json({ success: false, error: `Error del servidor: ${String(error)}` }, 500);
   }
 });
 
-// ============== ENV√çOS - PARTES DE SERVICIO ==============
+// ============== ENV‚àö√ßOS - PARTES DE SERVICIO ==============
 // Enviar parte de servicio por WhatsApp y/o Email
 app.post('/enviar-parte', async (c) => {
   try {
     const { eventoId, clienteEmails, clienteTelefonos, mensaje } = await c.req.json();
-    console.log('üìã Enviando parte de servicio para evento:', eventoId);
-    console.log('üìß Emails cliente:', clienteEmails);
-    console.log('üì± Tel√©fonos cliente:', clienteTelefonos);
-    console.log('üìù Mensaje length:', mensaje?.length);
+    console.log('Ô£ø√º√¨√£ Enviando parte de servicio para evento:', eventoId);
+    console.log('Ô£ø√º√¨√ü Emails cliente:', clienteEmails);
+    console.log('Ô£ø√º√¨¬± Tel‚àö¬©fonos cliente:', clienteTelefonos);
+    console.log('Ô£ø√º√¨√π Mensaje length:', mensaje?.length);
     
     // 1. Obtener datos completos del evento del KV store
-    console.log('üîç Obteniendo datos del evento desde KV store...');
+    console.log('Ô£ø√º√Æ√ß Obteniendo datos del evento desde KV store...');
     console.log('   EventoId recibido:', eventoId);
     console.log('   Tipo de eventoId:', typeof eventoId);
     
     // Intentar primero con la clave directa (como se guarda normalmente)
     let pedidoData = await kv.get(eventoId);
-    console.log('   B√∫squeda directa con:', eventoId, '-> Resultado:', pedidoData ? 'ENCONTRADO ‚úÖ' : 'NO ENCONTRADO ‚ùå');
+    console.log('   B‚àö‚à´squeda directa con:', eventoId, '-> Resultado:', pedidoData ? 'ENCONTRADO ‚Äö√∫√ñ' : 'NO ENCONTRADO ‚Äö√π√•');
     
     // Si no se encuentra, intentar con prefijo "pedido:"
     if (!pedidoData && !eventoId.startsWith('pedido:')) {
       const pedidoKey = `pedido:${eventoId}`;
       console.log('   Intentando con prefijo:', pedidoKey);
       pedidoData = await kv.get(pedidoKey);
-      console.log('   B√∫squeda con prefijo -> Resultado:', pedidoData ? 'ENCONTRADO ‚úÖ' : 'NO ENCONTRADO ‚ùå');
+      console.log('   B‚àö‚à´squeda con prefijo -> Resultado:', pedidoData ? 'ENCONTRADO ‚Äö√∫√ñ' : 'NO ENCONTRADO ‚Äö√π√•');
     }
     
-    // Si a√∫n no se encuentra, intentar sin prefijo si ven√≠a con √©l
+    // Si a‚àö‚à´n no se encuentra, intentar sin prefijo si ven‚àö‚â†a con ‚àö¬©l
     if (!pedidoData && eventoId.startsWith('pedido:')) {
       const sinPrefijo = eventoId.replace('pedido:', '');
       console.log('   Intentando sin prefijo:', sinPrefijo);
       pedidoData = await kv.get(sinPrefijo);
-      console.log('   B√∫squeda sin prefijo -> Resultado:', pedidoData ? 'ENCONTRADO ‚úÖ' : 'NO ENCONTRADO ‚ùå');
+      console.log('   B‚àö‚à´squeda sin prefijo -> Resultado:', pedidoData ? 'ENCONTRADO ‚Äö√∫√ñ' : 'NO ENCONTRADO ‚Äö√π√•');
     }
     
-    // Si todav√≠a no se encuentra, listar todas las claves para debug
+    // Si todav‚àö‚â†a no se encuentra, listar todas las claves para debug
     if (!pedidoData) {
-      console.error('‚ùå Error: Evento no encontrado en ning√∫n intento');
+      console.error('‚Äö√π√• Error: Evento no encontrado en ning‚àö‚à´n intento');
       console.log('   Listando algunas claves en KV store para debug...');
       try {
         const allData = await kv.getByPrefix('');
@@ -2435,10 +2435,10 @@ app.post('/enviar-parte', async (c) => {
       });
     }
     
-    console.log('‚úÖ Evento obtenido:', pedidoData.numero, pedidoData.cliente);
+    console.log('‚Äö√∫√ñ Evento obtenido:', pedidoData.numero, pedidoData.cliente);
     console.log('   Asignaciones en pedido:', pedidoData.asignaciones?.length || 0);
     
-    // 2. Preparar datos para el PDF (las asignaciones ya est√°n en el pedido)
+    // 2. Preparar datos para el PDF (las asignaciones ya est‚àö¬∞n en el pedido)
     const pedidoParaPDF = {
       ...pedidoData,
       asignaciones: pedidoData.asignaciones || []
@@ -2450,38 +2450,38 @@ app.post('/enviar-parte', async (c) => {
     };
     
     // 4. Generar el PDF del parte de servicio
-    console.log('üìÑ Generando PDF del parte de servicio...');
+    console.log('Ô£ø√º√¨√ë Generando PDF del parte de servicio...');
     let pdfBase64 = '';
     try {
       pdfBase64 = await generarPDFParte(pedidoParaPDF, '');
       if (pdfBase64) {
-        console.log('‚úÖ PDF generado correctamente');
+        console.log('‚Äö√∫√ñ PDF generado correctamente');
       } else {
-        console.log('‚ö†Ô∏è PDF no se pudo generar, se enviar√° sin adjunto');
+        console.log('‚Äö√∂‚Ä†√î‚àè√® PDF no se pudo generar, se enviar‚àö¬∞ sin adjunto');
       }
     } catch (pdfError) {
-      console.error('‚ùå Error al generar PDF:', pdfError);
+      console.error('‚Äö√π√• Error al generar PDF:', pdfError);
     }
     
-    // Enviar por WhatsApp si hay tel√©fonos
+    // Enviar por WhatsApp si hay tel‚àö¬©fonos
     if (clienteTelefonos && Array.isArray(clienteTelefonos) && clienteTelefonos.length > 0) {
-      console.log(`üì± Intentando enviar por WhatsApp a ${clienteTelefonos.length} n√∫mero(s)...`);
+      console.log(`Ô£ø√º√¨¬± Intentando enviar por WhatsApp a ${clienteTelefonos.length} n‚àö‚à´mero(s)...`);
       
       const whatsappApiKey = Deno.env.get('WHATSAPP_API_KEY');
       const whatsappPhoneId = Deno.env.get('WHATSAPP_PHONE_ID');
       
-      console.log('üîë WhatsApp configurado:', !!whatsappApiKey && !!whatsappPhoneId);
+      console.log('Ô£ø√º√Æ√´ WhatsApp configurado:', !!whatsappApiKey && !!whatsappPhoneId);
       
       if (whatsappApiKey && whatsappPhoneId) {
         for (const telefono of clienteTelefonos) {
           try {
-            // Limpiar n√∫mero de tel√©fono
+            // Limpiar n‚àö‚à´mero de tel‚àö¬©fono
             let numeroLimpio = telefono.replace(/\D/g, '');
             if (numeroLimpio.length === 9) {
               numeroLimpio = '34' + numeroLimpio;
             }
             
-            console.log('üì± Enviando a n√∫mero:', numeroLimpio);
+            console.log('Ô£ø√º√¨¬± Enviando a n‚àö‚à´mero:', numeroLimpio);
             
             const response = await fetch(`https://graph.facebook.com/v18.0/${whatsappPhoneId}/messages`, {
               method: 'POST',
@@ -2500,14 +2500,14 @@ app.post('/enviar-parte', async (c) => {
             });
             
             const result = await response.json();
-            console.log('üì± WhatsApp response status:', response.status);
-            console.log('üì± WhatsApp response:', result);
+            console.log('Ô£ø√º√¨¬± WhatsApp response status:', response.status);
+            console.log('Ô£ø√º√¨¬± WhatsApp response:', result);
             
             if (response.ok) {
-              console.log(`‚úÖ Parte enviado por WhatsApp a ${telefono}`);
+              console.log(`‚Äö√∫√ñ Parte enviado por WhatsApp a ${telefono}`);
               resultados.whatsapp.enviados++;
             } else {
-              console.log(`‚ùå Error enviando por WhatsApp a ${telefono}:`, result);
+              console.log(`‚Äö√π√• Error enviando por WhatsApp a ${telefono}:`, result);
               resultados.whatsapp.fallidos++;
               resultados.whatsapp.errores.push({
                 telefono,
@@ -2515,7 +2515,7 @@ app.post('/enviar-parte', async (c) => {
               });
             }
           } catch (error) {
-            console.log(`‚ùå Error en env√≠o por WhatsApp a ${telefono}:`, error);
+            console.log(`‚Äö√π√• Error en env‚àö‚â†o por WhatsApp a ${telefono}:`, error);
             resultados.whatsapp.fallidos++;
             resultados.whatsapp.errores.push({
               telefono,
@@ -2524,16 +2524,16 @@ app.post('/enviar-parte', async (c) => {
           }
         }
       } else {
-        console.log('‚ö†Ô∏è WhatsApp no configurado');
+        console.log('‚Äö√∂‚Ä†√î‚àè√® WhatsApp no configurado');
         resultados.whatsapp.errores.push({ error: 'WhatsApp no configurado' });
       }
     } else {
-      console.log('‚ö†Ô∏è No hay tel√©fonos de cliente para WhatsApp');
+      console.log('‚Äö√∂‚Ä†√î‚àè√® No hay tel‚àö¬©fonos de cliente para WhatsApp');
     }
     
     // Enviar por Email si hay emails
     if (clienteEmails && Array.isArray(clienteEmails) && clienteEmails.length > 0) {
-      console.log(`üìß Intentando enviar por Email a ${clienteEmails.length} direcci√≥n(es)...`);
+      console.log(`Ô£ø√º√¨√ü Intentando enviar por Email a ${clienteEmails.length} direcci‚àö‚â•n(es)...`);
       
       // Crear el mensaje HTML profesional para el email
       const fechaEvento = new Date(pedidoData.diaEvento).toLocaleDateString('es-ES', { 
@@ -2563,7 +2563,7 @@ app.post('/enviar-parte', async (c) => {
         <body>
           <div class="container">
             <div class="header">
-              <h1 style="margin: 0;">üìã Parte de Servicio</h1>
+              <h1 style="margin: 0;">Ô£ø√º√¨√£ Parte de Servicio</h1>
               <p style="margin: 10px 0 0 0; opacity: 0.9;">Evento: ${pedidoData.numero}</p>
             </div>
             
@@ -2573,22 +2573,22 @@ app.post('/enviar-parte', async (c) => {
               
               <div class="info-box">
                 <div class="info-item">
-                  <span class="info-label">üè¢ Cliente:</span> ${pedidoData.cliente}
+                  <span class="info-label">Ô£ø√º√®¬¢ Cliente:</span> ${pedidoData.cliente}
                 </div>
                 <div class="info-item">
-                  <span class="info-label">üìÖ Fecha:</span> ${fechaEvento}
+                  <span class="info-label">Ô£ø√º√¨√ñ Fecha:</span> ${fechaEvento}
                 </div>
                 <div class="info-item">
-                  <span class="info-label">üìç Lugar:</span> ${pedidoData.lugar}
+                  <span class="info-label">Ô£ø√º√¨√ß Lugar:</span> ${pedidoData.lugar}
                 </div>
                 <div class="info-item">
-                  <span class="info-label">üïê Hora de entrada:</span> ${pedidoData.horaEntrada}
+                  <span class="info-label">Ô£ø√º√Ø√™ Hora de entrada:</span> ${pedidoData.horaEntrada}
                 </div>
               </div>
               
               <div class="pdf-notice">
                 <p style="margin: 0; color: #1e40af; font-weight: bold;">
-                  üìé El parte de servicio en formato PDF se encuentra adjunto a este correo
+                  Ô£ø√º√¨√© El parte de servicio en formato PDF se encuentra adjunto a este correo
                 </p>
                 <p style="margin: 5px 0 0 0; font-size: 14px; color: #374151;">
                   Puedes imprimirlo, firmarlo y devolverlo
@@ -2596,16 +2596,16 @@ app.post('/enviar-parte', async (c) => {
               </div>
               
               <p>Puedes devolver el parte de servicio firmado.</p>
-              <p>Gracias por tu atenci√≥n.</p>
+              <p>Gracias por tu atenci‚àö‚â•n.</p>
               
               <p style="margin-top: 30px; color: #666; font-size: 14px;">
                 Saludos cordiales,<br>
-                <strong>Sistema de Gesti√≥n de Camareros</strong>
+                <strong>Sistema de Gesti‚àö‚â•n de Camareros</strong>
               </p>
             </div>
             
             <div class="footer">
-              <p style="margin: 0;">Este es un email autom√°tico del sistema de gesti√≥n</p>
+              <p style="margin: 0;">Este es un email autom‚àö¬∞tico del sistema de gesti‚àö‚â•n</p>
               <p style="margin: 5px 0 0 0; font-size: 12px; color: #999;">
                 Generado el ${new Date().toLocaleString('es-ES')}
               </p>
@@ -2631,13 +2631,13 @@ app.post('/enviar-parte', async (c) => {
             attachments: attachments
           });
           
-          console.log(`üìß Email result para ${email}:`, emailResult);
+          console.log(`Ô£ø√º√¨√ü Email result para ${email}:`, emailResult);
           
           if (emailResult.success) {
-            console.log(`‚úÖ Parte enviado por Email a ${email}`);
+            console.log(`‚Äö√∫√ñ Parte enviado por Email a ${email}`);
             resultados.email.enviados++;
           } else {
-            console.log(`‚ùå Error enviando por Email a ${email}:`, emailResult.error);
+            console.log(`‚Äö√π√• Error enviando por Email a ${email}:`, emailResult.error);
             resultados.email.fallidos++;
             resultados.email.errores.push({
               email,
@@ -2645,7 +2645,7 @@ app.post('/enviar-parte', async (c) => {
             });
           }
         } catch (error) {
-          console.log(`‚ùå Error en env√≠o por Email a ${email}:`, error);
+          console.log(`‚Äö√π√• Error en env‚àö‚â†o por Email a ${email}:`, error);
           resultados.email.fallidos++;
           resultados.email.errores.push({
             email,
@@ -2654,13 +2654,13 @@ app.post('/enviar-parte', async (c) => {
         }
       }
     } else {
-      console.log('‚ö†Ô∏è No hay emails de cliente');
+      console.log('‚Äö√∂‚Ä†√î‚àè√® No hay emails de cliente');
     }
     
     const totalEnviados = resultados.whatsapp.enviados + resultados.email.enviados;
     const success = totalEnviados > 0;
     
-    console.log('üìä Resultado final:', { success, totalEnviados, resultados });
+    console.log('Ô£ø√º√¨√§ Resultado final:', { success, totalEnviados, resultados });
     
     let mensaje_respuesta = '';
     if (success) {
@@ -2673,7 +2673,7 @@ app.post('/enviar-parte', async (c) => {
       }
       mensaje_respuesta = `Parte enviado correctamente - ${partes.join(', ')}`;
     } else {
-      mensaje_respuesta = 'No se pudo enviar el parte por ning√∫n canal';
+      mensaje_respuesta = 'No se pudo enviar el parte por ning‚àö‚à´n canal';
     }
     
     return c.json({ 
@@ -2682,12 +2682,12 @@ app.post('/enviar-parte', async (c) => {
       mensaje: mensaje_respuesta
     });
   } catch (error) {
-    console.log('‚ùå Error al enviar parte:', error);
+    console.log('‚Äö√π√• Error al enviar parte:', error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
 
-// ============== C√ìDIGOS QR PARA CONTROL DE ENTRADA/SALIDA ==============
+// ============== C‚àö√¨DIGOS QR PARA CONTROL DE ENTRADA/SALIDA ==============
 
 // Generar o obtener token QR para un pedido
 app.get('/pedidos/:id/qr-token', async (c) => {
@@ -2703,7 +2703,7 @@ app.get('/pedidos/:id/qr-token', async (c) => {
     // Obtener o crear token
     const qrToken = await db.obtenerOCrearQRTokenPorPedido(supabase, pedidoId);
     
-    // Generar URL apuntando al frontend de la aplicaci√≥n
+    // Generar URL apuntando al frontend de la aplicaci‚àö‚â•n
     const frontendUrl = c.req.url.replace('/functions/v1/make-server-ce05fe95/pedidos/', '/qr-scan/').replace(`/${pedidoId}/qr-token`, '');
     const qrUrl = `${frontendUrl}${qrToken.token}`;
     
@@ -2732,7 +2732,7 @@ app.post('/pedidos/:id/qr-regenerate', requireSecret, async (c) => {
     // Regenerar token (desactiva el anterior y crea uno nuevo)
     const qrToken = await db.regenerarQRToken(supabase, pedidoId);
     
-    // Generar URL apuntando al frontend de la aplicaci√≥n
+    // Generar URL apuntando al frontend de la aplicaci‚àö‚â•n
     const frontendUrl = c.req.url.replace('/functions/v1/make-server-ce05fe95/pedidos/', '/qr-scan/').replace(`/${pedidoId}/qr-regenerate`, '');
     const qrUrl = `${frontendUrl}${qrToken.token}`;
     
@@ -2747,7 +2747,7 @@ app.post('/pedidos/:id/qr-regenerate', requireSecret, async (c) => {
   }
 });
 
-// Validar token QR y obtener informaci√≥n del pedido
+// Validar token QR y obtener informaci‚àö‚â•n del pedido
 app.get('/qr-scan/:token', async (c) => {
   try {
     const token = c.req.param('token');
@@ -2755,7 +2755,7 @@ app.get('/qr-scan/:token', async (c) => {
     const qrToken = await db.obtenerQRTokenPorToken(supabase, token);
     
     if (!qrToken) {
-      return c.json({ success: false, error: 'C√≥digo QR no v√°lido o expirado' }, 404);
+      return c.json({ success: false, error: 'C‚àö‚â•digo QR no v‚àö¬∞lido o expirado' }, 404);
     }
     
     const pedido = await db.obtenerPedidoPorId(supabase, qrToken.pedido_id);
@@ -2790,10 +2790,10 @@ app.post('/qr-scan/:token/registro', async (c) => {
     const qrToken = await db.obtenerQRTokenPorToken(supabase, token);
     
     if (!qrToken) {
-      return c.json({ success: false, error: 'C√≥digo QR no v√°lido' }, 404);
+      return c.json({ success: false, error: 'C‚àö‚â•digo QR no v‚àö¬∞lido' }, 404);
     }
     
-    // Obtener el c√≥digo del camarero (puede venir como camareroId o camareroCodigo)
+    // Obtener el c‚àö‚â•digo del camarero (puede venir como camareroId o camareroCodigo)
     let codigo = camareroCodigo;
     if (!codigo && camareroId) {
       // Si viene el ID antiguo, intentar buscar por ID o email
@@ -2808,7 +2808,7 @@ app.post('/qr-scan/:token/registro', async (c) => {
       return c.json({ success: false, error: 'Camarero no identificado' }, 400);
     }
     
-    // Verificar que el camarero est√© asignado
+    // Verificar que el camarero est‚àö¬© asignado
     const asignaciones = await db.obtenerAsignaciones(supabase, qrToken.pedido_id);
     const asignacion = asignaciones.find(a => a.camarero_codigo === codigo);
     
@@ -2823,7 +2823,7 @@ app.post('/qr-scan/:token/registro', async (c) => {
       tipo
     });
     
-    // Actualizar la asignaci√≥n con la hora real
+    // Actualizar la asignaci‚àö‚â•n con la hora real
     const campoHora = tipo === 'entrada' ? 'hora_entrada_real' : 'hora_salida_real';
     await db.actualizarAsignacion(supabase, asignacion.id, {
       [campoHora]: registro.timestamp
@@ -2857,7 +2857,7 @@ app.get('/registros-qr', async (c) => {
         
         if (pedido && camarero) {
           const fechaEvento = new Date(pedido.dia_evento);
-          const dias = ['Domingo', 'Lunes', 'Martes', 'Mi√©rcoles', 'Jueves', 'Viernes', 'S√°bado'];
+          const dias = ['Domingo', 'Lunes', 'Martes', 'Mi‚àö¬©rcoles', 'Jueves', 'Viernes', 'S‚àö¬∞bado'];
           
           const registro = {
             id: `${pedido.id}-${camarero.codigo}`,
@@ -2917,7 +2917,7 @@ app.get('/registros-qr', async (c) => {
       }
     });
     
-    // Ordenar por fecha de evento descendente (m√°s recientes primero)
+    // Ordenar por fecha de evento descendente (m‚àö¬∞s recientes primero)
     registros.sort((a, b) => new Date(b.fechaEvento).getTime() - new Date(a.fechaEvento).getTime());
     
     return c.json({ success: true, registros });
@@ -2941,7 +2941,7 @@ app.put('/registros-qr/:pedidoId/:camareroId/salida', async (c) => {
       return c.json({ success: false, error: 'Pedido no encontrado' }, 404);
     }
     
-    // Buscar la asignaci√≥n del camarero
+    // Buscar la asignaci‚àö‚â•n del camarero
     const asignaciones = pedido.asignaciones || [];
     const asignacionIndex = asignaciones.findIndex(a => a.camareroId === camareroId);
     
@@ -2957,7 +2957,7 @@ app.put('/registros-qr/:pedidoId/:camareroId/salida', async (c) => {
     // Actualizar el registro de salida
     asignaciones[asignacionIndex].registroSalida = fechaEvento.toISOString();
     asignaciones[asignacionIndex].salidaRegistrada = true;
-    asignaciones[asignacionIndex].salidaEditadaManualmente = true; // Flag para indicar edici√≥n manual
+    asignaciones[asignacionIndex].salidaEditadaManualmente = true; // Flag para indicar edici‚àö‚â•n manual
     
     pedido.asignaciones = asignaciones;
     await kv.set(pedidoId, pedido);
@@ -2973,7 +2973,7 @@ app.put('/registros-qr/:pedidoId/:camareroId/salida', async (c) => {
   }
 });
 
-// ============== USUARIOS Y AUTENTICACI√ìN ==============
+// ============== USUARIOS Y AUTENTICACI‚àö√¨N ==============
 
 // Obtener todos los usuarios
 app.get('/usuarios', async (c) => {
@@ -2986,40 +2986,55 @@ app.get('/usuarios', async (c) => {
   }
 });
 
-// Crear nuevo usuario
+// Crear nuevo usuario ‚Äî protegido: solo admins autenticados pueden crear usuarios
+app.post('/usuarios', requireSecret, async (c) => {
+  try {
+    const datos = await c.req.json();
+    const usuario = await db.crearUsuario(supabase, datos);
+    console.log('\u2705 Usuario creado:', usuario.email, '-', usuario.rol);
+    return c.json({ success: true, data: usuario });
+  } catch (error) {
+    console.error('\u274c Error al crear usuario:', error);
+    return c.json({ success: false, error: 'Error interno del servidor' }, 500);
+  }
+});
+
+// Login
+app.post('/login', async (c) => {
+  try {
+    const { email, password } = await c.req.json();
+
+    if (!email || !password) {
+      return c.json({ success: false, error: 'Email y contrase\u00f1a son requeridos' }, 400);
+    }
+
     const usuario = await db.obtenerUsuarioPorEmail(supabase, email);
-    
+
     if (!usuario) {
-      // Respuesta gen√©rica para no revelar si el email existe
       return c.json({ success: false, error: 'Credenciales incorrectas' }, 401);
     }
 
-    // Verificar si la contrase√±a est√° hasheada (empieza con $2) o es legacy texto plano
     let passwordValida = false;
     if (usuario.password_hash && usuario.password_hash.startsWith('$2')) {
-      // Hash bcrypt ‚Äî comparaci√≥n segura
       passwordValida = await bcrypt.compare(password, usuario.password_hash);
     } else {
-      // Legacy texto plano ‚Äî comparar y migrar al hash autom√°ticamente
       passwordValida = usuario.password_hash === password;
       if (passwordValida) {
-        // Migrar a bcrypt en este mismo login
         const nuevoHash = await bcrypt.hash(password);
         await supabase
           .from('usuarios')
           .update({ password_hash: nuevoHash })
           .eq('id', usuario.id);
-        console.log('üîí Contrase√±a migrada a bcrypt para:', email);
+        console.log('\ud83d\udd12 Contrase\u00f1a migrada a bcrypt para:', email);
       }
     }
 
     if (!passwordValida) {
       return c.json({ success: false, error: 'Credenciales incorrectas' }, 401);
     }
-    
-    console.log('‚úÖ Login exitoso:', email);
-    
-    // Retornar datos del usuario sin la contrase√±a
+
+    console.log('\u2705 Login exitoso:', email);
+
     return c.json({ 
       success: true, 
       user: {
@@ -3036,7 +3051,7 @@ app.get('/usuarios', async (c) => {
 
 // Actualizar estado de usuario (activar/desactivar)
 // NOTA: La tabla 'usuarios' no tiene columna 'activo' en el schema actual
-// Esta ruta est√° comentada temporalmente hasta agregar la columna en SQL
+// Esta ruta est‚àö¬∞ comentada temporalmente hasta agregar la columna en SQL
 /*
 app.put('/usuarios/:id/estado', async (c) => {
   try {
@@ -3062,7 +3077,7 @@ app.put('/usuarios/:id/estado', async (c) => {
       return c.json({ success: false, error: 'Usuario no encontrado' }, 404);
     }
     
-    console.log(`‚úÖ Estado de usuario actualizado: ${usuario.email} - Activo: ${activo}`);
+    console.log(`‚Äö√∫√ñ Estado de usuario actualizado: ${usuario.email} - Activo: ${activo}`);
     
     return c.json({ success: true, data: usuario });
   } catch (error) {
@@ -3072,7 +3087,7 @@ app.put('/usuarios/:id/estado', async (c) => {
 });
 */
 
-// Enviar email de restablecimiento de contrase√±a
+// Enviar email de restablecimiento de contrase‚àö¬±a
 app.post('/enviar-reset-password', async (c) => {
   try {
     const { email } = await c.req.json();
@@ -3088,7 +3103,7 @@ app.post('/enviar-reset-password', async (c) => {
     // Generar token de reset (simple para prototipo)
     const resetToken = btoa(`${email}:${Date.now()}`);
     
-    // Guardar token con expiraci√≥n de 1 hora
+    // Guardar token con expiraci‚àö‚â•n de 1 hora
     const tokenId = `reset-token:${resetToken}`;
     await kv.set(tokenId, {
       email,
@@ -3117,11 +3132,11 @@ app.post('/enviar-reset-password', async (c) => {
           body: JSON.stringify({
             from: Deno.env.get('EMAIL_FROM') || 'noreply@example.com',
             to: email,
-            subject: 'Restablecer Contrase√±a - Gesti√≥n de Perfiles',
+            subject: 'Restablecer Contrase‚àö¬±a - Gesti‚àö‚â•n de Perfiles',
             html: `
-              <h2>Restablecer Contrase√±a</h2>
+              <h2>Restablecer Contrase‚àö¬±a</h2>
               <p>Hola ${usuario.nombre},</p>
-              <p>Recibimos una solicitud para restablecer tu contrase√±a.</p>
+              <p>Recibimos una solicitud para restablecer tu contrase‚àö¬±a.</p>
               <p><strong>Token de restablecimiento:</strong> ${resetToken}</p>
               <p>Este token expira en 1 hora.</p>
               <p>Si no solicitaste este cambio, ignora este email.</p>
@@ -3139,17 +3154,17 @@ app.post('/enviar-reset-password', async (c) => {
       }
     }
     
-    // Intentar con Mailgun si Resend fall√≥
+    // Intentar con Mailgun si Resend fall‚àö‚â•
     if (!emailEnviado && mailgunKey && mailgunDomain) {
       try {
         const formData = new FormData();
         formData.append('from', Deno.env.get('EMAIL_FROM') || 'noreply@example.com');
         formData.append('to', email);
-        formData.append('subject', 'Restablecer Contrase√±a - Gesti√≥n de Perfiles');
+        formData.append('subject', 'Restablecer Contrase‚àö¬±a - Gesti‚àö‚â•n de Perfiles');
         formData.append('html', `
-          <h2>Restablecer Contrase√±a</h2>
+          <h2>Restablecer Contrase‚àö¬±a</h2>
           <p>Hola ${usuario.nombre},</p>
-          <p>Recibimos una solicitud para restablecer tu contrase√±a.</p>
+          <p>Recibimos una solicitud para restablecer tu contrase‚àö¬±a.</p>
           <p><strong>Token de restablecimiento:</strong> ${resetToken}</p>
           <p>Este token expira en 1 hora.</p>
           <p>Si no solicitaste este cambio, ignora este email.</p>
@@ -3177,13 +3192,13 @@ app.post('/enviar-reset-password', async (c) => {
     }
     
     if (emailEnviado) {
-      console.log('‚úÖ Email de reset enviado a:', email);
+      console.log('‚Äö√∫√ñ Email de reset enviado a:', email);
       return c.json({ success: true, message: 'Email de restablecimiento enviado' });
     } else {
-      console.log('‚ùå Error al enviar email de reset:', errorEmail);
+      console.log('‚Äö√π√• Error al enviar email de reset:', errorEmail);
       return c.json({ 
         success: false, 
-        error: 'No se pudo enviar el email. Verifica la configuraci√≥n del servicio de email.' 
+        error: 'No se pudo enviar el email. Verifica la configuraci‚àö‚â•n del servicio de email.' 
       }, 500);
     }
   } catch (error) {
@@ -3192,7 +3207,7 @@ app.post('/enviar-reset-password', async (c) => {
   }
 });
 
-// Obtener registros QR de un perfil espec√≠fico (por email)
+// Obtener registros QR de un perfil espec‚àö‚â†fico (por email)
 app.get('/registros-perfil', async (c) => {
   try {
     const email = c.req.query('email');
@@ -3219,7 +3234,7 @@ app.get('/registros-perfil', async (c) => {
       if (!pedido) return null;
       
       const fechaEvento = new Date(pedido.dia_evento);
-      const dias = ['Domingo', 'Lunes', 'Martes', 'Mi√©rcoles', 'Jueves', 'Viernes', 'S√°bado'];
+      const dias = ['Domingo', 'Lunes', 'Martes', 'Mi‚àö¬©rcoles', 'Jueves', 'Viernes', 'S‚àö¬∞bado'];
       
       const registro = {
         id: `${pedido.id}-${camarero.codigo}`,
@@ -3270,7 +3285,7 @@ app.get('/registros-perfil', async (c) => {
       return registro;
     }).filter(r => r !== null);
     
-    // Ordenar por fecha de evento descendente (m√°s recientes primero)
+    // Ordenar por fecha de evento descendente (m‚àö¬∞s recientes primero)
     registros.sort((a, b) => new Date(b.fechaEvento).getTime() - new Date(a.fechaEvento).getTime());
     
     return c.json({ success: true, registros });
@@ -3283,3 +3298,4 @@ app.get('/registros-perfil', async (c) => {
 Deno.serve(app.fetch);
 
 // Trigger redeploy - 2026-03-10 - Migration to SQL complete
+
