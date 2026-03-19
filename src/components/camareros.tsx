@@ -35,17 +35,17 @@ export function Camareros({ camareros, setCamareros, pedidos = [], coordinadores
   const [showCalendario, setShowCalendario] = useState(false);
   
   // Estado formulario disponibilidad
-  const [modoDisponibilidad, setModoDisponibilidad] = useState('unica'); // 'unica', 'rango', 'semanal'
+  const [modoDisponibilidad, setModoDisponibilidad] = useState('unica');
   const [fechaInicio, setFechaInicio] = useState('');
   const [fechaFin, setFechaFin] = useState('');
   const [horaInicio, setHoraInicio] = useState('');
   const [horaFin, setHoraFin] = useState('');
-  const [diasSeleccionados, setDiasSeleccionados] = useState([]); // 0=Domingo, 1=Lunes...
+  const [diasSeleccionados, setDiasSeleccionados] = useState([]);
   const [tipoDisponibilidad, setTipoDisponibilidad] = useState('disponible');
 
   const initialFormState = {
     codigo: '',
-    tipoPerfil: 'CAM', // Nuevo campo
+    tipoPerfil: 'CAM',
     nombre: '',
     apellido: '',
     telefono: '',
@@ -89,17 +89,23 @@ export function Camareros({ camareros, setCamareros, pedidos = [], coordinadores
     const hoy = new Date();
     const hoyStr = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-${String(hoy.getDate()).padStart(2, '0')}`;
     
-    const activos = camareros.filter(c => c.estado !== 'apercibido');
+    // FIX: asegurar que disponibilidad siempre sea array
+    const camarerosSeguros = camareros.map(c => ({
+      ...c,
+      disponibilidad: Array.isArray(c.disponibilidad) ? c.disponibilidad : []
+    }));
+
+    const activos = camarerosSeguros.filter(c => c.estado !== 'apercibido');
     const totalActivos = activos.length;
-    const totalApercibidos = camareros.filter(c => c.estado === 'apercibido').length;
+    const totalApercibidos = camarerosSeguros.filter(c => c.estado === 'apercibido').length;
     
     const noDisponiblesIds = new Set(
       activos
-        .filter(c => c.disponibilidad?.some(d => d.fecha === hoyStr && d.tipo === 'no-disponible'))
+        .filter(c => c.disponibilidad.some(d => d.fecha === hoyStr && d.tipo === 'no-disponible'))
         .map(c => c.id)
     );
     
-    const pedidosHoy = pedidos.filter(p => p.diaEvento === hoyStr);
+    const pedidosHoy = (Array.isArray(pedidos) ? pedidos : []).filter(p => p.diaEvento === hoyStr);
     const asignadosIds = new Set();
     pedidosHoy.forEach(p => {
       if (p.asignaciones) p.asignaciones.forEach(a => asignadosIds.add(a.camareroId));
@@ -157,16 +163,11 @@ export function Camareros({ camareros, setCamareros, pedidos = [], coordinadores
         horario: horarioStr
       });
     } else {
-      // Rango o Semanal
       if (!fechaInicio || !fechaFin) return [];
       const end = new Date(fechaFin);
       
       for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-        // Si es semanal, verificar el día de la semana
         if (modoDisponibilidad === 'semanal') {
-           // getDay(): 0=Domingo, 1=Lunes.
-           // Ajustar según la UI (si la UI usa 1=Lunes, hay que mapear)
-           // Aquí asumiremos que diasSeleccionados guarda lo que retorna getDay() (0-6)
            if (!diasSeleccionados.includes(d.getDay())) continue;
         }
 
@@ -189,9 +190,8 @@ export function Camareros({ camareros, setCamareros, pedidos = [], coordinadores
       return;
     }
 
-    const disponibilidadActual = selectedCamarero.disponibilidad || [];
+    const disponibilidadActual = Array.isArray(selectedCamarero.disponibilidad) ? selectedCamarero.disponibilidad : [];
     
-    // Filtrar duplicados (si ya existe fecha, la reemplazamos con la nueva)
     const fechasNuevasSet = new Set(nuevasFechas.map(f => f.fecha));
     const disponibilidadFiltrada = disponibilidadActual.filter(d => !fechasNuevasSet.has(d.fecha));
     
@@ -205,7 +205,6 @@ export function Camareros({ camareros, setCamareros, pedidos = [], coordinadores
       });
       if (response.ok) {
         await cargarDatos();
-        // Limpiar formulario disponibilidad
         setFechaInicio('');
         setFechaFin('');
         setDiasSeleccionados([]);
@@ -217,7 +216,8 @@ export function Camareros({ camareros, setCamareros, pedidos = [], coordinadores
 
   const eliminarDisponibilidad = async (fecha) => {
     if (!selectedCamarero) return;
-    const disponibilidad = selectedCamarero.disponibilidad.filter(d => d.fecha !== fecha);
+    const disponibilidadActual = Array.isArray(selectedCamarero.disponibilidad) ? selectedCamarero.disponibilidad : [];
+    const disponibilidad = disponibilidadActual.filter(d => d.fecha !== fecha);
     try {
       const response = await fetch(`${baseUrl}/camareros/${selectedCamarero.id}`, {
         method: 'PUT',
@@ -235,7 +235,6 @@ export function Camareros({ camareros, setCamareros, pedidos = [], coordinadores
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Prevenir envíos duplicados
     if (isSubmitting) return;
     
     if (!formData.nombre || !formData.apellido) {
@@ -257,7 +256,6 @@ export function Camareros({ camareros, setCamareros, pedidos = [], coordinadores
       });
       const result = await response.json();
       if (result.success) {
-        // Si es un perfil nuevo (no edición) con email y teléfono, crear usuario y enviar bienvenida
         if (!editingCamarero && formData.email && formData.telefono) {
           try {
             const bienvenidaRes = await fetch(`${baseUrl}/camareros/bienvenida`, {
@@ -306,20 +304,20 @@ export function Camareros({ camareros, setCamareros, pedidos = [], coordinadores
   const editarCamarero = (camarero) => {
     setFormData({
       codigo: camarero.codigo || '',
-      tipoPerfil: camarero.tipoPerfil || 'CAM', // Nuevo campo
+      tipoPerfil: camarero.tipoPerfil || 'CAM',
       nombre: camarero.nombre,
       apellido: camarero.apellido,
       telefono: camarero.telefono,
       email: camarero.email,
-      especialidades: camarero.especialidades || [],
+      especialidades: Array.isArray(camarero.especialidades) ? camarero.especialidades : [],
       experiencia: camarero.experiencia || '',
       coordinadorId: camarero.coordinadorId || '',
       comentarios: camarero.comentarios || '',
-      idiomas: camarero.idiomas || [],
+      idiomas: Array.isArray(camarero.idiomas) ? camarero.idiomas : [],
       otrosIdiomas: camarero.otrosIdiomas || '',
-      certificaciones: camarero.certificaciones || [],
+      certificaciones: Array.isArray(camarero.certificaciones) ? camarero.certificaciones : [],
       otrasCertificaciones: camarero.otrasCertificaciones || '',
-      disponibilidad: camarero.disponibilidad || [],
+      disponibilidad: Array.isArray(camarero.disponibilidad) ? camarero.disponibilidad : [],
       estado: camarero.estado || 'activo'
     });
     setEditingCamarero(camarero);
@@ -362,7 +360,6 @@ export function Camareros({ camareros, setCamareros, pedidos = [], coordinadores
   // --- Funciones de Exportación e Importación Excel ---
   const exportarAExcel = () => {
     try {
-      // Preparar datos para exportar
       const datosExportacion = camareros.map(cam => ({
         'Código': cam.codigo || '',
         'Tipo Perfil': cam.tipoPerfil || 'CAM',
@@ -381,12 +378,10 @@ export function Camareros({ camareros, setCamareros, pedidos = [], coordinadores
         'Estado': cam.estado || 'activo'
       }));
 
-      // Crear libro de Excel
       const ws = XLSX.utils.json_to_sheet(datosExportacion);
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, 'Personal');
 
-      // Generar archivo y descargarlo
       const fecha = new Date().toISOString().split('T')[0];
       XLSX.writeFile(wb, `Personal_${fecha}.xlsx`);
 
@@ -412,7 +407,6 @@ export function Camareros({ camareros, setCamareros, pedidos = [], coordinadores
         return;
       }
 
-      // Confirmar importación
       if (!window.confirm(`¿Deseas importar ${jsonData.length} registros?\n\nEsto creará nuevos perfiles. Los códigos duplicados serán ignorados.`)) {
         return;
       }
@@ -422,14 +416,12 @@ export function Camareros({ camareros, setCamareros, pedidos = [], coordinadores
 
       for (const row of jsonData) {
         try {
-          // Validar campos requeridos
           if (!row['Nombre'] || !row['Apellido']) {
             console.warn('Fila sin nombre/apellido, omitida:', row);
             errores++;
             continue;
           }
 
-          // Verificar si el código ya existe
           const codigoExistente = camareros.find(c => c.codigo === row['Código']);
           if (codigoExistente) {
             console.warn('Código duplicado, omitido:', row['Código']);
@@ -437,7 +429,6 @@ export function Camareros({ camareros, setCamareros, pedidos = [], coordinadores
             continue;
           }
 
-          // Construir objeto camarero
           const nuevoCamarero = {
             codigo: row['Código'] || '',
             tipoPerfil: row['Tipo Perfil'] || 'CAM',
@@ -457,7 +448,6 @@ export function Camareros({ camareros, setCamareros, pedidos = [], coordinadores
             disponibilidad: []
           };
 
-          // Crear en el servidor
           const response = await fetch(`${baseUrl}/camareros`, {
             method: 'POST',
             headers: getWriteHeaders(),
@@ -475,13 +465,8 @@ export function Camareros({ camareros, setCamareros, pedidos = [], coordinadores
         }
       }
 
-      // Recargar datos
       await cargarDatos();
-
-      // Mostrar resultado
       alert(`✅ Importación completada\n\n• Importados: ${importados}\n• Errores/Omitidos: ${errores}`);
-
-      // Limpiar input file
       event.target.value = '';
     } catch (error) {
       console.error('Error al procesar archivo:', error);
@@ -525,10 +510,9 @@ export function Camareros({ camareros, setCamareros, pedidos = [], coordinadores
         </div>
       </div>
 
-      {/* Métricas (Solo visibles en modo Activos) */}
+      {/* Métricas */}
       {!verApercibidos ? (
         <>
-          {/* Botones de Exportación e Importación */}
           <div className="flex justify-end gap-3">
             <button
               onClick={exportarAExcel}
@@ -630,7 +614,6 @@ export function Camareros({ camareros, setCamareros, pedidos = [], coordinadores
           </div>
           
           <form onSubmit={handleSubmit} className="p-6">
-            {/* TAB GENERAL */}
             {activeFormTab === 'general' && (
               <div className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -666,7 +649,7 @@ export function Camareros({ camareros, setCamareros, pedidos = [], coordinadores
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
                       <option key="coord-empty" value="">Seleccionar...</option>
-                      {coordinadores.map(coord => (
+                      {(Array.isArray(coordinadores) ? coordinadores : []).map(coord => (
                         <option key={coord.id} value={coord.id}>{coord.nombre}</option>
                       ))}
                     </select>
@@ -712,7 +695,6 @@ export function Camareros({ camareros, setCamareros, pedidos = [], coordinadores
                 </div>
               </div>
             )}
-            {/* TAB HABILIDADES */}
             {activeFormTab === 'habilidades' && (
               <div className="space-y-8">
                 <div>
@@ -789,7 +771,7 @@ export function Camareros({ camareros, setCamareros, pedidos = [], coordinadores
                       <h4 className="text-lg font-bold text-gray-900">{camarero.nombre} {camarero.apellido}</h4>
                       {camarero.coordinadorId && (
                          <span className="bg-purple-50 text-purple-700 px-2 py-0.5 rounded-full text-xs border border-purple-100">
-                           Coord: {coordinadores.find(c => c.id === camarero.coordinadorId)?.nombre || 'Desconocido'}
+                           Coord: {(Array.isArray(coordinadores) ? coordinadores : []).find(c => c.id === camarero.coordinadorId)?.nombre || 'Desconocido'}
                          </span>
                       )}
                     </div>
@@ -840,7 +822,7 @@ export function Camareros({ camareros, setCamareros, pedidos = [], coordinadores
                   </div>
                 </div>
 
-                {/* Calendario inline con opciones avanzadas */}
+                {/* Calendario inline */}
                 {showCalendario && selectedCamarero?.id === camarero.id && (
                   <div className="mt-6 pt-6 border-t border-gray-200 animate-in fade-in bg-white rounded-lg">
                     <div className="flex flex-col xl:flex-row gap-6">
@@ -852,7 +834,6 @@ export function Camareros({ camareros, setCamareros, pedidos = [], coordinadores
                            Gestionar Disponibilidad
                         </h5>
                         
-                        {/* Selector de Modo */}
                         <div className="flex bg-white rounded-lg p-1 mb-4 shadow-sm">
                           <button onClick={() => setModoDisponibilidad('unica')} className={`flex-1 py-1.5 text-xs font-medium rounded ${modoDisponibilidad === 'unica' ? 'bg-blue-100 text-blue-700' : 'text-gray-500'}`}>Única</button>
                           <button onClick={() => setModoDisponibilidad('rango')} className={`flex-1 py-1.5 text-xs font-medium rounded ${modoDisponibilidad === 'rango' ? 'bg-blue-100 text-blue-700' : 'text-gray-500'}`}>Rango</button>
@@ -860,7 +841,6 @@ export function Camareros({ camareros, setCamareros, pedidos = [], coordinadores
                         </div>
 
                         <div className="space-y-3">
-                           {/* Fechas */}
                            <div className="grid grid-cols-2 gap-2">
                               <div>
                                 <label className="block text-xs font-bold text-gray-600 mb-1">{modoDisponibilidad === 'unica' ? 'Fecha' : 'Desde'}</label>
@@ -874,7 +854,6 @@ export function Camareros({ camareros, setCamareros, pedidos = [], coordinadores
                               )}
                            </div>
 
-                           {/* Días Semanales */}
                            {modoDisponibilidad === 'semanal' && (
                              <div>
                                <label className="block text-xs font-bold text-gray-600 mb-1">Repetir los días</label>
@@ -892,7 +871,6 @@ export function Camareros({ camareros, setCamareros, pedidos = [], coordinadores
                              </div>
                            )}
 
-                           {/* Horario */}
                            <div className="grid grid-cols-2 gap-2">
                               <div>
                                 <label className="block text-xs font-bold text-gray-600 mb-1">Hora Inicio</label>
@@ -904,7 +882,6 @@ export function Camareros({ camareros, setCamareros, pedidos = [], coordinadores
                               </div>
                            </div>
                            
-                           {/* Tipo */}
                            <div>
                              <label className="block text-xs font-bold text-gray-600 mb-1">Estado</label>
                              <select value={tipoDisponibilidad} onChange={(e) => setTipoDisponibilidad(e.target.value)} className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm">
@@ -926,7 +903,7 @@ export function Camareros({ camareros, setCamareros, pedidos = [], coordinadores
                           <span className="text-xs font-normal text-gray-500 bg-gray-100 px-2 py-1 rounded">Ordenado por fecha</span>
                         </h5>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 max-h-[300px] overflow-y-auto pr-1">
-                          {camarero.disponibilidad && camarero.disponibilidad.length > 0 ? (
+                          {Array.isArray(camarero.disponibilidad) && camarero.disponibilidad.length > 0 ? (
                             camarero.disponibilidad
                               .sort((a, b) => new Date(a.fecha) - new Date(b.fecha))
                               .map((disp, idx) => (
