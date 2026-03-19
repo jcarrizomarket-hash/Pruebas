@@ -5,6 +5,7 @@ import { getReadHeaders, getWriteHeaders } from '../utils/api-headers';
 export function Clientes({ clientes, setClientes, baseUrl, publicAnonKey, cargarDatos }) {
   const [showForm, setShowForm] = useState(false);
   const [editandoClienteId, setEditandoClienteId] = useState(null);
+  const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState({
     nombre: '',
     contacto1: '',
@@ -20,13 +21,10 @@ export function Clientes({ clientes, setClientes, baseUrl, publicAnonKey, cargar
     if (clientes.length === 0) {
       return 'CL001';
     }
-    
-    // Obtener todos los números de cliente
     const numeros = clientes.map(c => {
       const match = c.numero?.match(/CL(\d+)/);
       return match ? parseInt(match[1]) : 0;
     });
-    
     const maxNumero = Math.max(...numeros);
     const nuevoNumero = maxNumero + 1;
     return `CL${String(nuevoNumero).padStart(3, '0')}`;
@@ -34,10 +32,10 @@ export function Clientes({ clientes, setClientes, baseUrl, publicAnonKey, cargar
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+    if (saving) return;
+    setSaving(true);
     try {
       if (editandoClienteId) {
-        // Actualizar cliente existente
         const clienteActualizado = clientes.find(c => c.id === editandoClienteId);
         const response = await fetch(`${baseUrl}/clientes/${editandoClienteId}`, {
           method: 'PUT',
@@ -47,14 +45,12 @@ export function Clientes({ clientes, setClientes, baseUrl, publicAnonKey, cargar
             ...formData
           })
         });
-
         const result = await response.json();
         if (result.success) {
           await cargarDatos();
           resetForm();
         }
       } else {
-        // Crear nuevo cliente
         const numeroCliente = generarNumeroCliente();
         const response = await fetch(`${baseUrl}/clientes`, {
           method: 'POST',
@@ -64,7 +60,6 @@ export function Clientes({ clientes, setClientes, baseUrl, publicAnonKey, cargar
             ...formData
           })
         });
-
         const result = await response.json();
         if (result.success) {
           await cargarDatos();
@@ -73,6 +68,8 @@ export function Clientes({ clientes, setClientes, baseUrl, publicAnonKey, cargar
       }
     } catch (error) {
       console.log('Error al guardar cliente:', error);
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -95,13 +92,11 @@ export function Clientes({ clientes, setClientes, baseUrl, publicAnonKey, cargar
     if (!confirm('¿Estás seguro de que deseas eliminar este cliente?')) {
       return;
     }
-
     try {
       const response = await fetch(`${baseUrl}/clientes/${clienteId}`, {
         method: 'DELETE',
         headers: getWriteHeaders()
       });
-
       const result = await response.json();
       if (result.success) {
         await cargarDatos();
@@ -134,7 +129,6 @@ export function Clientes({ clientes, setClientes, baseUrl, publicAnonKey, cargar
             <Building2 className="w-6 h-6 text-blue-600" />
             <h2 className="text-gray-900">Gestión de Clientes</h2>
           </div>
-          
           {!showForm && (
             <button
               onClick={() => setShowForm(true)}
@@ -146,15 +140,12 @@ export function Clientes({ clientes, setClientes, baseUrl, publicAnonKey, cargar
           )}
         </div>
 
-        {/* Formulario */}
         {showForm && (
           <form onSubmit={handleSubmit} className="mb-8 p-6 bg-gray-50 rounded-lg border border-gray-200">
             <h3 className="text-gray-900 mb-4">
               {editandoClienteId ? 'Editar Cliente' : 'Nuevo Cliente'}
             </h3>
-
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Nombre del cliente */}
               <div className="md:col-span-2">
                 <label className="block text-gray-700 mb-2">Nombre del Cliente *</label>
                 <input
@@ -166,8 +157,6 @@ export function Clientes({ clientes, setClientes, baseUrl, publicAnonKey, cargar
                   placeholder="Nombre completo del cliente"
                 />
               </div>
-
-              {/* Contacto 1 */}
               <div>
                 <label className="block text-gray-700 mb-2">Contacto 1</label>
                 <input
@@ -178,8 +167,6 @@ export function Clientes({ clientes, setClientes, baseUrl, publicAnonKey, cargar
                   placeholder="Nombre del contacto principal"
                 />
               </div>
-
-              {/* Contacto 2 */}
               <div>
                 <label className="block text-gray-700 mb-2">Contacto 2</label>
                 <input
@@ -190,8 +177,6 @@ export function Clientes({ clientes, setClientes, baseUrl, publicAnonKey, cargar
                   placeholder="Nombre del contacto secundario"
                 />
               </div>
-
-              {/* Teléfono 1 */}
               <div>
                 <label className="block text-gray-700 mb-2">Teléfono 1</label>
                 <input
@@ -202,8 +187,6 @@ export function Clientes({ clientes, setClientes, baseUrl, publicAnonKey, cargar
                   placeholder="+34 600 000 000"
                 />
               </div>
-
-              {/* Teléfono 2 */}
               <div>
                 <label className="block text-gray-700 mb-2">Teléfono 2</label>
                 <input
@@ -214,8 +197,6 @@ export function Clientes({ clientes, setClientes, baseUrl, publicAnonKey, cargar
                   placeholder="+34 600 000 000"
                 />
               </div>
-
-              {/* Mail 1 */}
               <div>
                 <label className="block text-gray-700 mb-2">Email 1</label>
                 <input
@@ -226,8 +207,6 @@ export function Clientes({ clientes, setClientes, baseUrl, publicAnonKey, cargar
                   placeholder="email@ejemplo.com"
                 />
               </div>
-
-              {/* Mail 2 */}
               <div>
                 <label className="block text-gray-700 mb-2">Email 2</label>
                 <input
@@ -238,8 +217,6 @@ export function Clientes({ clientes, setClientes, baseUrl, publicAnonKey, cargar
                   placeholder="email@ejemplo.com"
                 />
               </div>
-
-              {/* Notas */}
               <div className="md:col-span-2">
                 <label className="block text-gray-700 mb-2">Notas</label>
                 <textarea
@@ -250,13 +227,13 @@ export function Clientes({ clientes, setClientes, baseUrl, publicAnonKey, cargar
                 />
               </div>
             </div>
-
             <div className="flex gap-3 mt-6">
               <button
                 type="submit"
-                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                disabled={saving}
+                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
               >
-                {editandoClienteId ? 'Actualizar Cliente' : 'Guardar Cliente'}
+                {saving ? 'Guardando...' : (editandoClienteId ? 'Actualizar Cliente' : 'Guardar Cliente')}
               </button>
               <button
                 type="button"
@@ -269,26 +246,15 @@ export function Clientes({ clientes, setClientes, baseUrl, publicAnonKey, cargar
           </form>
         )}
 
-        {/* Lista de clientes */}
         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Código
-                </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Cliente
-                </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Contacto 1
-                </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Contacto 2
-                </th>
-                <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Acciones
-                </th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Código</th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cliente</th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contacto 1</th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contacto 2</th>
+                <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -303,12 +269,8 @@ export function Clientes({ clientes, setClientes, baseUrl, publicAnonKey, cargar
               ) : (
                 clientes.map((cliente) => (
                   <tr key={cliente.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600">
-                      {cliente.numero}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {cliente.nombre}
-                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600">{cliente.numero}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{cliente.nombre}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       <div className="flex flex-col">
                         <span className="font-medium text-gray-900">{cliente.contacto1}</span>

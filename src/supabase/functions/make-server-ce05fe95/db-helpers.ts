@@ -316,7 +316,7 @@ export async function obtenerUsuarios(supabase: SupabaseClient) {
 export async function crearUsuario(supabase: SupabaseClient, datos: any) {
   const rawPassword = datos.password || datos.password_hash;
   if (!rawPassword) throw new Error('Se requiere una contraseña para crear el usuario.');
-  const passwordHash = await hashPassword(rawPassword);
+ const passwordHash = await hashPassword(rawPassword);
   const { data, error } = await supabase
     .from('usuarios')
     .insert({
