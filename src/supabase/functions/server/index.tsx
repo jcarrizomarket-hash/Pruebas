@@ -142,6 +142,84 @@ app.delete('/camareros/:id', requireSecret, async (c) => {
   }
 });
 
+// ============== BIENVENIDA PERFIL ==============
+// Crea usuario con email+nombre como credenciales y envía WhatsApp de bienvenida
+app.post('/camareros/bienvenida', requireSecret, async (c) => {
+  try {
+    const { nombre, apellido, email, telefono, camarero_codigo } = await c.req.json();
+
+    if (!nombre || !apellido || !email) {
+      return c.json({ success: false, error: 'nombre, apellido y email son requeridos' }, 400);
+    }
+
+    if (!telefono) {
+      return c.json({ success: false, error: 'El perfil no tiene teléfono configurado' }, 400);
+    }
+
+    const nombreCompleto = `${nombre} ${apellido}`;
+
+    // 1. Crear usuario con contraseña = email
+    const usuarioExistente = await db.obtenerUsuarioPorEmail(supabase, email);
+    if (!usuarioExistente) {
+      await db.crearUsuario(supabase, {
+        nombre: nombreCompleto,
+        email,
+        password: email,
+        rol: 'perfil',
+        camarero_codigo: camarero_codigo || null
+      });
+      console.log('✅ Usuario creado para:', email);
+    } else {
+      console.log('ℹ️ Usuario ya existe:', email);
+    }
+
+    // 2. Enviar WhatsApp de bienvenida
+    const whatsappApiKey = Deno.env.get('WHATSAPP_API_KEY');
+    const whatsappPhoneId = Deno.env.get('WHATSAPP_PHONE_ID');
+
+    if (!whatsappApiKey || !whatsappPhoneId) {
+      console.log('⚠️ WhatsApp no configurado. Usuario creado pero sin mensaje enviado.');
+      return c.json({ success: true, whatsapp: false, mensaje: 'Usuario creado. WhatsApp no configurado.' });
+    }
+
+    // Limpiar número
+    let numeroLimpio = telefono.replace(/\D/g, '');
+    if (numeroLimpio.startsWith('0')) {
+      numeroLimpio = numeroLimpio.substring(1);
+    }
+
+    const mensajeBienvenida = `¡Bienvenido/a a Camareros Bcn, ${nombreCompleto}! 🎉\n\nDesde acá podrás ver todos tus servicios y horarios.\n\nEntra a la página:\nhttps://gestiondeservicios.jcarrizo.com/\n\nUsuario: ${nombreCompleto}\nContraseña: ${email}\n\n¡Nos vemos en el próximo servicio! 👋`;
+
+    const response = await fetch(`https://graph.facebook.com/v18.0/${whatsappPhoneId}/messages`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${whatsappApiKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        messaging_product: 'whatsapp',
+        to: numeroLimpio,
+        type: 'text',
+        text: { body: mensajeBienvenida }
+      })
+    });
+
+    const resultado = await response.json();
+
+    if (resultado.error) {
+      console.error('❌ Error WhatsApp:', resultado.error);
+      return c.json({ success: true, whatsapp: false, mensaje: 'Usuario creado. Error al enviar WhatsApp: ' + resultado.error.message });
+    }
+
+    console.log('✅ Bienvenida enviada a:', telefono);
+    return c.json({ success: true, whatsapp: true, mensaje: `Usuario creado y WhatsApp enviado a ${telefono}` });
+
+  } catch (error) {
+    console.error('❌ Error en bienvenida:', error);
+    return c.json({ success: false, error: String(error) }, 500);
+  }
+});
+
 // ============== COORDINADORES ==============
 app.get('/coordinadores', async (c) => {
   try {

@@ -257,6 +257,39 @@ export function Camareros({ camareros, setCamareros, pedidos = [], coordinadores
       });
       const result = await response.json();
       if (result.success) {
+        // Si es un perfil nuevo (no edición) con email y teléfono, crear usuario y enviar bienvenida
+        if (!editingCamarero && formData.email && formData.telefono) {
+          try {
+            const bienvenidaRes = await fetch(`${baseUrl}/camareros/bienvenida`, {
+              method: 'POST',
+              headers: getWriteHeaders(),
+              body: JSON.stringify({
+                nombre: formData.nombre,
+                apellido: formData.apellido,
+                email: formData.email,
+                telefono: formData.telefono,
+                camarero_codigo: result.data?.codigo || formData.codigo
+              })
+            });
+            const bienvenidaResult = await bienvenidaRes.json();
+            if (bienvenidaResult.success) {
+              if (bienvenidaResult.whatsapp) {
+                alert(`✅ Perfil creado.\n📱 WhatsApp de bienvenida enviado a ${formData.telefono}`);
+              } else {
+                alert(`✅ Perfil y usuario creados.\n⚠️ WhatsApp no enviado: ${bienvenidaResult.mensaje}`);
+              }
+            } else {
+              alert(`✅ Perfil creado.\n⚠️ No se pudo crear el usuario: ${bienvenidaResult.error}`);
+            }
+          } catch (err) {
+            console.log('Error al enviar bienvenida:', err);
+            alert('✅ Perfil creado.\n⚠️ No se pudo enviar el WhatsApp de bienvenida.');
+          }
+        } else if (!editingCamarero && !formData.email) {
+          alert('✅ Perfil creado.\nℹ️ Sin email: no se creó usuario ni se envió bienvenida.');
+        } else if (!editingCamarero && !formData.telefono) {
+          alert('✅ Perfil creado.\nℹ️ Sin teléfono: no se envió WhatsApp de bienvenida.');
+        }
         await cargarDatos();
         resetForm();
       } else {
