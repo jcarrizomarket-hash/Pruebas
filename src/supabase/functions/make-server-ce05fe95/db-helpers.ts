@@ -3,6 +3,7 @@
  * Reemplaza el sistema KV Store con queries SQL directas
  */
 import { SupabaseClient } from 'npm:@supabase/supabase-js@2.39.3';
+
 async function hashPassword(password: string): Promise<string> {
   const encoder = new TextEncoder();
   const data = encoder.encode(password);
@@ -10,18 +11,14 @@ async function hashPassword(password: string): Promise<string> {
   const hashArray = Array.from(new Uint8Array(hashBuffer));
   return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 }
+
 // ============== GENERACIÓN DE CÓDIGOS CORRELATIVOS ==============
-/**
- * Genera el siguiente código correlativo para una tabla
- * Formato: PREFIJO + número (ej: CAM001, COC001, CLI001)
- */
 export async function generarSiguienteCodigo(
   supabase: SupabaseClient,
   tabla: string,
   prefijo: string
 ): Promise<string> {
   try {
-    // Obtener el último código de la tabla
     const { data, error } = await supabase
       .from(tabla)
       .select('codigo')
@@ -29,21 +26,18 @@ export async function generarSiguienteCodigo(
       .limit(1);
     if (error) throw error;
     if (!data || data.length === 0) {
-      // Primera vez: retornar PREFIJO001
       return `${prefijo}001`;
     }
-    // Extraer el número del último código
     const ultimoCodigo = data[0].codigo;
     const numero = parseInt(ultimoCodigo.replace(prefijo, ''), 10);
     const siguienteNumero = numero + 1;
-    // Formatear con ceros a la izquierda (mínimo 3 dígitos)
     return `${prefijo}${siguienteNumero.toString().padStart(3, '0')}`;
   } catch (error) {
     console.error('Error generando código:', error);
-    // Fallback: generar código con timestamp
     return `${prefijo}${Date.now()}`;
   }
 }
+
 // ============== COORDINADORES ==============
 export async function obtenerCoordinadores(supabase: SupabaseClient) {
   const { data, error } = await supabase
@@ -53,8 +47,8 @@ export async function obtenerCoordinadores(supabase: SupabaseClient) {
   if (error) throw error;
   return data || [];
 }
+
 export async function crearCoordinador(supabase: SupabaseClient, datos: any) {
-  // Generar código correlativo
   const codigo = await generarSiguienteCodigo(supabase, 'coordinadores', 'COORD');
   const { data, error } = await supabase
     .from('coordinadores')
@@ -71,6 +65,7 @@ export async function crearCoordinador(supabase: SupabaseClient, datos: any) {
   if (error) throw error;
   return data;
 }
+
 export async function actualizarCoordinador(supabase: SupabaseClient, id: string, datos: any) {
   const { data, error } = await supabase
     .from('coordinadores')
@@ -81,6 +76,7 @@ export async function actualizarCoordinador(supabase: SupabaseClient, id: string
   if (error) throw error;
   return data;
 }
+
 export async function eliminarCoordinador(supabase: SupabaseClient, id: string) {
   const { error } = await supabase
     .from('coordinadores')
@@ -89,6 +85,7 @@ export async function eliminarCoordinador(supabase: SupabaseClient, id: string) 
   if (error) throw error;
   return true;
 }
+
 // ============== CAMAREROS ==============
 export async function obtenerCamareros(supabase: SupabaseClient) {
   const { data, error } = await supabase
@@ -98,16 +95,14 @@ export async function obtenerCamareros(supabase: SupabaseClient) {
   if (error) throw error;
   return data || [];
 }
+
 export async function crearCamarero(supabase: SupabaseClient, datos: any) {
-  // Determinar el prefijo según el tipo de perfil
   const tipoPerfil = datos.tipoPerfil || datos.categoria || 'Camarero';
-  let prefijo = 'CAM'; // Default
-  
+  let prefijo = 'CAM';
   if (tipoPerfil.toLowerCase().includes('cocina')) prefijo = 'COC';
   else if (tipoPerfil.toLowerCase().includes('barra')) prefijo = 'BAR';
   else if (tipoPerfil.toLowerCase().includes('limpieza')) prefijo = 'LIM';
   else if (tipoPerfil.toLowerCase().includes('seguridad')) prefijo = 'SEG';
-  // Generar código correlativo
   const codigo = datos.codigo || await generarSiguienteCodigo(supabase, 'camareros', prefijo);
   const { data, error } = await supabase
     .from('camareros')
@@ -126,6 +121,7 @@ export async function crearCamarero(supabase: SupabaseClient, datos: any) {
   if (error) throw error;
   return data;
 }
+
 export async function actualizarCamarero(supabase: SupabaseClient, id: string, datos: any) {
   const { data, error } = await supabase
     .from('camareros')
@@ -136,6 +132,7 @@ export async function actualizarCamarero(supabase: SupabaseClient, id: string, d
   if (error) throw error;
   return data;
 }
+
 export async function eliminarCamarero(supabase: SupabaseClient, id: string) {
   const { error } = await supabase
     .from('camareros')
@@ -144,15 +141,17 @@ export async function eliminarCamarero(supabase: SupabaseClient, id: string) {
   if (error) throw error;
   return true;
 }
+
 export async function obtenerCamareroPorEmail(supabase: SupabaseClient, email: string) {
   const { data, error } = await supabase
     .from('camareros')
     .select('*')
     .eq('email', email)
     .single();
-  if (error && error.code !== 'PGRST116') throw error; // PGRST116 = no encontrado
+  if (error && error.code !== 'PGRST116') throw error;
   return data;
 }
+
 export async function obtenerCamareroPorCodigo(supabase: SupabaseClient, codigo: string) {
   const { data, error } = await supabase
     .from('camareros')
@@ -162,6 +161,7 @@ export async function obtenerCamareroPorCodigo(supabase: SupabaseClient, codigo:
   if (error && error.code !== 'PGRST116') throw error;
   return data;
 }
+
 // ============== CLIENTES ==============
 export async function obtenerClientes(supabase: SupabaseClient) {
   const { data, error } = await supabase
@@ -171,6 +171,7 @@ export async function obtenerClientes(supabase: SupabaseClient) {
   if (error) throw error;
   return data || [];
 }
+
 export async function crearCliente(supabase: SupabaseClient, datos: any) {
   const codigo = await generarSiguienteCodigo(supabase, 'clientes', 'CLI');
   const { data, error } = await supabase
@@ -191,6 +192,7 @@ export async function crearCliente(supabase: SupabaseClient, datos: any) {
   if (error) throw error;
   return data;
 }
+
 export async function actualizarCliente(supabase: SupabaseClient, id: string, datos: any) {
   const { data, error } = await supabase
     .from('clientes')
@@ -201,6 +203,7 @@ export async function actualizarCliente(supabase: SupabaseClient, id: string, da
   if (error) throw error;
   return data;
 }
+
 export async function eliminarCliente(supabase: SupabaseClient, id: string) {
   const { error } = await supabase
     .from('clientes')
@@ -209,6 +212,7 @@ export async function eliminarCliente(supabase: SupabaseClient, id: string) {
   if (error) throw error;
   return true;
 }
+
 // ============== PEDIDOS/EVENTOS ==============
 export async function obtenerPedidos(supabase: SupabaseClient) {
   const { data, error } = await supabase
@@ -216,10 +220,43 @@ export async function obtenerPedidos(supabase: SupabaseClient) {
     .select('*')
     .order('created_at', { ascending: false });
   if (error) throw error;
-  return data || [];
+
+  // Mapear snake_case a camelCase para compatibilidad con el frontend
+  return (data || []).map(p => ({
+    ...p,
+    diaEvento: p.dia_evento,
+    horaEntrada: p.hora_entrada,
+    horaSalida: p.hora_salida,
+    tipoEvento: p.tipo_evento,
+    cantidadCamareros: p.cantidad_camareros,
+    numeroPersonas: p.numero_personas,
+    coordinadorId: p.coordinador,
+    numero: p.codigo
+  }));
 }
+
+export async function obtenerPedidoPorId(supabase: SupabaseClient, id: string) {
+  const { data, error } = await supabase
+    .from('pedidos')
+    .select('*')
+    .eq('id', id)
+    .single();
+  if (error && error.code !== 'PGRST116') throw error;
+  if (!data) return null;
+  return {
+    ...data,
+    diaEvento: data.dia_evento,
+    horaEntrada: data.hora_entrada,
+    horaSalida: data.hora_salida,
+    tipoEvento: data.tipo_evento,
+    cantidadCamareros: data.cantidad_camareros,
+    numeroPersonas: data.numero_personas,
+    coordinadorId: data.coordinador,
+    numero: data.codigo
+  };
+}
+
 export async function crearPedido(supabase: SupabaseClient, datos: any) {
-  // Generar código correlativo
   const codigo = await generarSiguienteCodigo(supabase, 'pedidos', 'PED');
   const { data, error } = await supabase
     .from('pedidos')
@@ -233,15 +270,26 @@ export async function crearPedido(supabase: SupabaseClient, datos: any) {
       lugar: datos.lugar || '',
       numero_personas: datos.numeroPersonas || datos.numero_personas || 0,
       observaciones: datos.observaciones || '',
-      coordinador: datos.coordinador || '',
+      coordinador: datos.coordinadorId || datos.coordinador || '',
       estado: datos.estado || 'pendiente',
       cantidad_camareros: datos.cantidadCamareros || datos.cantidad_camareros || 0
     })
     .select()
     .single();
   if (error) throw error;
-  return data;
+  return {
+    ...data,
+    diaEvento: data.dia_evento,
+    horaEntrada: data.hora_entrada,
+    horaSalida: data.hora_salida,
+    tipoEvento: data.tipo_evento,
+    cantidadCamareros: data.cantidad_camareros,
+    numeroPersonas: data.numero_personas,
+    coordinadorId: data.coordinador,
+    numero: data.codigo
+  };
 }
+
 export async function actualizarPedido(supabase: SupabaseClient, id: string, datos: any) {
   const { data, error } = await supabase
     .from('pedidos')
@@ -250,8 +298,19 @@ export async function actualizarPedido(supabase: SupabaseClient, id: string, dat
     .select()
     .single();
   if (error) throw error;
-  return data;
+  return {
+    ...data,
+    diaEvento: data.dia_evento,
+    horaEntrada: data.hora_entrada,
+    horaSalida: data.hora_salida,
+    tipoEvento: data.tipo_evento,
+    cantidadCamareros: data.cantidad_camareros,
+    numeroPersonas: data.numero_personas,
+    coordinadorId: data.coordinador,
+    numero: data.codigo
+  };
 }
+
 export async function eliminarPedido(supabase: SupabaseClient, id: string) {
   const { error } = await supabase
     .from('pedidos')
@@ -260,10 +319,10 @@ export async function eliminarPedido(supabase: SupabaseClient, id: string) {
   if (error) throw error;
   return true;
 }
+
 // ============== ASIGNACIONES ==============
 export async function obtenerAsignaciones(supabase: SupabaseClient, pedidoId?: string) {
   let query = supabase.from('asignaciones').select('*');
-  
   if (pedidoId) {
     query = query.eq('pedido_id', pedidoId);
   }
@@ -271,6 +330,7 @@ export async function obtenerAsignaciones(supabase: SupabaseClient, pedidoId?: s
   if (error) throw error;
   return data || [];
 }
+
 export async function crearAsignacion(supabase: SupabaseClient, datos: any) {
   const { data, error } = await supabase
     .from('asignaciones')
@@ -285,6 +345,7 @@ export async function crearAsignacion(supabase: SupabaseClient, datos: any) {
   if (error) throw error;
   return data;
 }
+
 export async function actualizarAsignacion(supabase: SupabaseClient, id: string, datos: any) {
   const { data, error } = await supabase
     .from('asignaciones')
@@ -295,6 +356,7 @@ export async function actualizarAsignacion(supabase: SupabaseClient, id: string,
   if (error) throw error;
   return data;
 }
+
 export async function eliminarAsignacion(supabase: SupabaseClient, pedidoId: string, camareroCodigo: string) {
   const { error } = await supabase
     .from('asignaciones')
@@ -304,6 +366,7 @@ export async function eliminarAsignacion(supabase: SupabaseClient, pedidoId: str
   if (error) throw error;
   return true;
 }
+
 // ============== USUARIOS ==============
 export async function obtenerUsuarios(supabase: SupabaseClient) {
   const { data, error } = await supabase
@@ -313,10 +376,11 @@ export async function obtenerUsuarios(supabase: SupabaseClient) {
   if (error) throw error;
   return data || [];
 }
+
 export async function crearUsuario(supabase: SupabaseClient, datos: any) {
   const rawPassword = datos.password || datos.password_hash;
   if (!rawPassword) throw new Error('Se requiere una contraseña para crear el usuario.');
- const passwordHash = await hashPassword(rawPassword);
+  const passwordHash = await hashPassword(rawPassword);
   const { data, error } = await supabase
     .from('usuarios')
     .insert({
@@ -331,6 +395,7 @@ export async function crearUsuario(supabase: SupabaseClient, datos: any) {
   if (error) throw error;
   return data;
 }
+
 export async function obtenerUsuarioPorEmail(supabase: SupabaseClient, email: string) {
   const { data, error } = await supabase
     .from('usuarios')
@@ -340,6 +405,7 @@ export async function obtenerUsuarioPorEmail(supabase: SupabaseClient, email: st
   if (error && error.code !== 'PGRST116') throw error;
   return data;
 }
+
 export async function actualizarUsuario(supabase: SupabaseClient, id: string, datos: any) {
   const { data, error } = await supabase
     .from('usuarios')
@@ -350,6 +416,7 @@ export async function actualizarUsuario(supabase: SupabaseClient, id: string, da
   if (error) throw error;
   return data;
 }
+
 export async function eliminarUsuario(supabase: SupabaseClient, id: string) {
   const { error } = await supabase
     .from('usuarios')
@@ -358,6 +425,7 @@ export async function eliminarUsuario(supabase: SupabaseClient, id: string) {
   if (error) throw error;
   return true;
 }
+
 // ============== QR TOKENS ==============
 export async function crearQRToken(supabase: SupabaseClient, datos: any) {
   const { data, error } = await supabase
@@ -374,6 +442,7 @@ export async function crearQRToken(supabase: SupabaseClient, datos: any) {
   if (error) throw error;
   return data;
 }
+
 export async function obtenerQRTokenPorToken(supabase: SupabaseClient, token: string) {
   const { data, error } = await supabase
     .from('qr_tokens')
@@ -384,8 +453,8 @@ export async function obtenerQRTokenPorToken(supabase: SupabaseClient, token: st
   if (error && error.code !== 'PGRST116') throw error;
   return data;
 }
+
 export async function obtenerOCrearQRTokenPorPedido(supabase: SupabaseClient, pedidoId: string) {
-  // Buscar token existente activo
   const { data: existente, error: errorBuscar } = await supabase
     .from('qr_tokens')
     .select('*')
@@ -394,12 +463,8 @@ export async function obtenerOCrearQRTokenPorPedido(supabase: SupabaseClient, pe
     .eq('tipo', 'general')
     .maybeSingle();
   if (errorBuscar && errorBuscar.code !== 'PGRST116') throw errorBuscar;
-  if (existente) {
-    return existente;
-  }
-  // Crear nuevo token
+  if (existente) return existente;
   const token = `${pedidoId}-${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
-  
   const { data, error } = await supabase
     .from('qr_tokens')
     .insert({
@@ -413,15 +478,13 @@ export async function obtenerOCrearQRTokenPorPedido(supabase: SupabaseClient, pe
   if (error) throw error;
   return data;
 }
+
 export async function regenerarQRToken(supabase: SupabaseClient, pedidoId: string) {
-  // Desactivar tokens anteriores
   await supabase
     .from('qr_tokens')
     .update({ activo: false })
     .eq('pedido_id', pedidoId);
-  // Crear nuevo token
   const token = `${pedidoId}-${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
-  
   const { data, error } = await supabase
     .from('qr_tokens')
     .insert({
@@ -435,6 +498,7 @@ export async function regenerarQRToken(supabase: SupabaseClient, pedidoId: strin
   if (error) throw error;
   return data;
 }
+
 // ============== REGISTROS DE ASISTENCIA ==============
 export async function registrarAsistencia(supabase: SupabaseClient, datos: any) {
   const { data, error } = await supabase
@@ -449,9 +513,9 @@ export async function registrarAsistencia(supabase: SupabaseClient, datos: any) 
   if (error) throw error;
   return data;
 }
+
 export async function obtenerRegistrosAsistencia(supabase: SupabaseClient, pedidoId?: string) {
   let query = supabase.from('registros_asistencia').select('*');
-  
   if (pedidoId) {
     query = query.eq('pedido_id', pedidoId);
   }
@@ -459,10 +523,10 @@ export async function obtenerRegistrosAsistencia(supabase: SupabaseClient, pedid
   if (error) throw error;
   return data || [];
 }
+
 // ============== CONFIRMACIONES ==============
 export async function crearConfirmacion(supabase: SupabaseClient, datos: any) {
   const token = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
-  
   const { data, error } = await supabase
     .from('confirmaciones')
     .insert({
@@ -476,6 +540,7 @@ export async function crearConfirmacion(supabase: SupabaseClient, datos: any) {
   if (error) throw error;
   return data;
 }
+
 export async function obtenerConfirmacionPorToken(supabase: SupabaseClient, token: string) {
   const { data, error } = await supabase
     .from('confirmaciones')
@@ -485,6 +550,7 @@ export async function obtenerConfirmacionPorToken(supabase: SupabaseClient, toke
   if (error && error.code !== 'PGRST116') throw error;
   return data;
 }
+
 export async function actualizarConfirmacion(supabase: SupabaseClient, token: string, estado: string) {
   const { data, error } = await supabase
     .from('confirmaciones')
@@ -498,6 +564,7 @@ export async function actualizarConfirmacion(supabase: SupabaseClient, token: st
   if (error) throw error;
   return data;
 }
+
 export async function obtenerConfirmacionesPorPedido(supabase: SupabaseClient, pedidoId: string) {
   const { data, error } = await supabase
     .from('confirmaciones')
@@ -506,6 +573,7 @@ export async function obtenerConfirmacionesPorPedido(supabase: SupabaseClient, p
   if (error) throw error;
   return data || [];
 }
+
 // ============== CHATS ==============
 export async function obtenerChats(supabase: SupabaseClient) {
   const { data, error } = await supabase
@@ -515,6 +583,7 @@ export async function obtenerChats(supabase: SupabaseClient) {
   if (error) throw error;
   return data || [];
 }
+
 export async function obtenerChatsPorCoordinador(supabase: SupabaseClient, coordinadorId: string) {
   const { data, error } = await supabase
     .from('chats')
@@ -524,6 +593,7 @@ export async function obtenerChatsPorCoordinador(supabase: SupabaseClient, coord
   if (error) throw error;
   return data || [];
 }
+
 export async function obtenerChatPorId(supabase: SupabaseClient, chatId: string) {
   const { data, error } = await supabase
     .from('chats')
@@ -533,6 +603,7 @@ export async function obtenerChatPorId(supabase: SupabaseClient, chatId: string)
   if (error && error.code !== 'PGRST116') throw error;
   return data;
 }
+
 export async function crearChat(supabase: SupabaseClient, datos: any) {
   const { data, error } = await supabase
     .from('chats')
@@ -550,6 +621,7 @@ export async function crearChat(supabase: SupabaseClient, datos: any) {
   if (error) throw error;
   return data;
 }
+
 export async function actualizarChat(supabase: SupabaseClient, chatId: string, datos: any) {
   const { data, error } = await supabase
     .from('chats')
@@ -560,6 +632,7 @@ export async function actualizarChat(supabase: SupabaseClient, chatId: string, d
   if (error) throw error;
   return data;
 }
+
 export async function eliminarChat(supabase: SupabaseClient, chatId: string) {
   const { error } = await supabase
     .from('chats')
@@ -568,16 +641,13 @@ export async function eliminarChat(supabase: SupabaseClient, chatId: string) {
   if (error) throw error;
   return true;
 }
+
 export async function agregarMensajeAlChat(supabase: SupabaseClient, chatId: string, mensaje: any) {
-  // Primero obtenemos el chat actual
   const chatActual = await obtenerChatPorId(supabase, chatId);
-  
   if (!chatActual) {
     throw new Error(`Chat ${chatId} no encontrado`);
   }
-  // Agregamos el nuevo mensaje al array
   const mensajesActualizados = [...(chatActual.mensajes || []), mensaje];
-  // Actualizamos el chat con los mensajes nuevos
   const { data, error } = await supabase
     .from('chats')
     .update({ mensajes: mensajesActualizados })
