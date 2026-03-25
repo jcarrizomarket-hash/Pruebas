@@ -19,14 +19,10 @@ async function verifyPassword(password: string, hash: string): Promise<boolean> 
 const app = new Hono().basePath('/make-server-ce05fe95');
 
 app.use('*', cors({
-  origin: [
-    'https://pruebas-h3ty04sw5-eukosgestion.vercel.app',
-    'https://gestiondeservicios.jcarrizo.com'
-  ],
+  origin: '*',
   allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowHeaders: ['Content-Type', 'Authorization', 'x-fn-secret'],
 }));
-app.use('*', logger(console.log));
 
 // Middleware de seguridad simple
 const requireSecret = async (c, next) => {
@@ -2243,7 +2239,7 @@ app.post('/enviar-mensaje-grupal', async (c) => {
     const { pedidoId, mensaje } = await c.req.json();
     console.log('Ô£ø√º√¨¬ß Enviando mensaje grupal para pedido:', pedidoId);
     
-    const pedido = await kv.get(pedidoId);
+    const pedido = await db.obtenerPedidoPorId(supabase, pedidoId);
     if (!pedido) {
       console.log('‚Äö√π√• Pedido no encontrado:', pedidoId);
       return c.json({ success: false, error: 'Pedido no encontrado' });
@@ -2274,7 +2270,8 @@ app.post('/enviar-mensaje-grupal', async (c) => {
     
     for (const asignacion of asignaciones) {
       try {
-        const camarero = await kv.get(asignacion.camareroId);
+        const camareros = await db.obtenerCamareros(supabase);
+const camarero = camareros.find(c => c.id === asignacion.camareroId);
         
         if (!camarero || !camarero.telefono) {
           console.log(`‚Äö√∂‚Ä†√î‚àè√® Camarero ${asignacion.camareroNombre} sin tel‚àö¬©fono`);
@@ -2404,55 +2401,17 @@ app.post('/enviar-parte', async (c) => {
     console.log('Ô£ø√º√¨¬± Tel‚àö¬©fonos cliente:', clienteTelefonos);
     console.log('Ô£ø√º√¨√π Mensaje length:', mensaje?.length);
     
-    // 1. Obtener datos completos del evento del KV store
-    console.log('Ô£ø√º√Æ√ß Obteniendo datos del evento desde KV store...');
-    console.log('   EventoId recibido:', eventoId);
-    console.log('   Tipo de eventoId:', typeof eventoId);
+    // Obtener datos del evento desde SQL
+    const pedidoData = await db.obtenerPedidoPorId(supabase, eventoId);
     
-    // Intentar primero con la clave directa (como se guarda normalmente)
-    let pedidoData = await kv.get(eventoId);
-    console.log('   B‚àö‚à´squeda directa con:', eventoId, '-> Resultado:', pedidoData ? 'ENCONTRADO ‚Äö√∫√ñ' : 'NO ENCONTRADO ‚Äö√π√•');
-    
-    // Si no se encuentra, intentar con prefijo "pedido:"
-    if (!pedidoData && !eventoId.startsWith('pedido:')) {
-      const pedidoKey = `pedido:${eventoId}`;
-      console.log('   Intentando con prefijo:', pedidoKey);
-      pedidoData = await kv.get(pedidoKey);
-      console.log('   B‚àö‚à´squeda con prefijo -> Resultado:', pedidoData ? 'ENCONTRADO ‚Äö√∫√ñ' : 'NO ENCONTRADO ‚Äö√π√•');
-    }
-    
-    // Si a‚àö‚à´n no se encuentra, intentar sin prefijo si ven‚àö‚â†a con ‚àö¬©l
-    if (!pedidoData && eventoId.startsWith('pedido:')) {
-      const sinPrefijo = eventoId.replace('pedido:', '');
-      console.log('   Intentando sin prefijo:', sinPrefijo);
-      pedidoData = await kv.get(sinPrefijo);
-      console.log('   B‚àö‚à´squeda sin prefijo -> Resultado:', pedidoData ? 'ENCONTRADO ‚Äö√∫√ñ' : 'NO ENCONTRADO ‚Äö√π√•');
-    }
-    
-    // Si todav‚àö‚â†a no se encuentra, listar todas las claves para debug
     if (!pedidoData) {
-      console.error('‚Äö√π√• Error: Evento no encontrado en ning‚àö‚à´n intento');
-      console.log('   Listando algunas claves en KV store para debug...');
-      try {
-        const allData = await kv.getByPrefix('');
-        const first10 = allData.slice(0, 10);
-        console.log('   Total de registros en KV:', allData.length);
-        console.log('   Primeros 10 registros:', first10.map((item: any) => ({
-          id: item.id,
-          numero: item.numero,
-          cliente: item.cliente?.substring(0, 20)
-        })));
-      } catch (e) {
-        console.log('   No se pudieron listar claves:', e);
-      }
-      
       return c.json({
         success: false,
         error: `No se pudo obtener los datos del evento. ID buscado: ${eventoId}`
       });
     }
     
-    console.log('‚Äö√∫√ñ Evento obtenido:', pedidoData.numero, pedidoData.cliente);
+    console.log('✅ Evento obtenido:', pedidoData.numero, pedidoData.cliente);
     console.log('   Asignaciones en pedido:', pedidoData.asignaciones?.length || 0);
     
     // 2. Preparar datos para el PDF (las asignaciones ya est‚àö¬∞n en el pedido)

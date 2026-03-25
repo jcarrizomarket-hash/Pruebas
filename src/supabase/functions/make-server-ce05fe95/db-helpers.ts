@@ -291,9 +291,31 @@ export async function crearPedido(supabase: SupabaseClient, datos: any) {
 }
 
 export async function actualizarPedido(supabase: SupabaseClient, id: string, datos: any) {
+  const camposValidos: any = {};
+
+  if (datos.asignaciones !== undefined) camposValidos.asignaciones = datos.asignaciones;
+  if (datos.cliente !== undefined) camposValidos.cliente = datos.cliente;
+  if (datos.lugar !== undefined) camposValidos.lugar = datos.lugar;
+  if (datos.estado !== undefined) camposValidos.estado = datos.estado;
+  if (datos.observaciones !== undefined) camposValidos.observaciones = datos.observaciones;
+  if (datos.coordinador !== undefined) camposValidos.coordinador = datos.coordinador;
+  if (datos.coordinadorId !== undefined) camposValidos.coordinador = datos.coordinadorId;
+  if (datos.dia_evento !== undefined) camposValidos.dia_evento = datos.dia_evento;
+  if (datos.diaEvento !== undefined) camposValidos.dia_evento = datos.diaEvento;
+  if (datos.hora_entrada !== undefined) camposValidos.hora_entrada = datos.hora_entrada;
+  if (datos.horaEntrada !== undefined) camposValidos.hora_entrada = datos.horaEntrada;
+  if (datos.hora_salida !== undefined) camposValidos.hora_salida = datos.hora_salida;
+  if (datos.horaSalida !== undefined) camposValidos.hora_salida = datos.horaSalida;
+  if (datos.tipo_evento !== undefined) camposValidos.tipo_evento = datos.tipo_evento;
+  if (datos.tipoEvento !== undefined) camposValidos.tipo_evento = datos.tipoEvento;
+  if (datos.cantidad_camareros !== undefined) camposValidos.cantidad_camareros = datos.cantidad_camareros;
+  if (datos.cantidadCamareros !== undefined) camposValidos.cantidad_camareros = datos.cantidadCamareros;
+  if (datos.numero_personas !== undefined) camposValidos.numero_personas = datos.numero_personas;
+  if (datos.numeroPersonas !== undefined) camposValidos.numero_personas = datos.numeroPersonas;
+
   const { data, error } = await supabase
     .from('pedidos')
-    .update(datos)
+    .update(camposValidos)
     .eq('id', id)
     .select()
     .single();

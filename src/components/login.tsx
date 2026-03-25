@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { Lock, Eye, EyeOff } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
-import { getReadHeaders, getWriteHeaders } from '../utils/api-headers';
 
 interface LoginProps {
   onLogin: (user: { email: string; nombre: string; rol: 'admin' | 'coordinador' | 'perfil' }) => void;
@@ -16,8 +15,6 @@ export function Login({ onLogin, baseUrl, publicAnonKey }: LoginProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-
-
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,7 +31,6 @@ export function Login({ onLogin, baseUrl, publicAnonKey }: LoginProps) {
       const response = await fetch(`${baseUrl}/login`, {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${publicAnonKey}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({ email, password })
