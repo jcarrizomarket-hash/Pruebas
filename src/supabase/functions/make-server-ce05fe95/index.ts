@@ -299,15 +299,15 @@ app.get('/informes/camarero', async (c) => {
 });
 
 // ============== CONFIRMACIONES ==============
-app.post('/guardar-token', async (c) => {
+aapp.post('/guardar-token', async (c) => {
   try {
     const { token, pedidoId, camareroId, coordinadorId } = await c.req.json();
     
-    await kv.set(`confirmacion:${token}`, {
+    await db.crearConfirmacion(supabase, {
+      token,
       pedidoId,
-      camareroId,
-      coordinadorId,
-      createdAt: new Date().toISOString()
+      camareroCodigo: camareroId,
+      coordinadorId
     });
     
     return c.json({ success: true });

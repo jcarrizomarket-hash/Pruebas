@@ -6,8 +6,6 @@
  * getWriteHeaders() — para POST, PUT, DELETE (escritura, incluye x-fn-secret)
  */
 
-import { publicAnonKey } from './supabase/info';
-
 const getFnSecret = (): string => {
   try {
     return import.meta.env?.VITE_FN_SECRET || '';
@@ -19,7 +17,6 @@ const getFnSecret = (): string => {
 /** Headers para operaciones de LECTURA (GET) */
 export const getReadHeaders = (): HeadersInit => ({
   'Content-Type': 'application/json',
-  Authorization: `Bearer ${publicAnonKey}`,
 });
 
 /** Headers para operaciones de ESCRITURA (POST, PUT, DELETE) — incluye x-fn-secret */
@@ -27,7 +24,6 @@ export const getWriteHeaders = (): HeadersInit => {
   const secret = getFnSecret();
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    Authorization: `Bearer ${publicAnonKey}`,
   };
   if (secret) {
     headers['x-fn-secret'] = secret;
