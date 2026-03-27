@@ -147,8 +147,8 @@ export async function actualizarCamarero(supabase: SupabaseClient, id: string, d
   if (datos.otrosIdiomas !== undefined) camposValidos.otros_idiomas = datos.otrosIdiomas;
   if (datos.tipo_perfil !== undefined) camposValidos.tipo_perfil = datos.tipo_perfil;
   if (datos.tipoPerfil !== undefined) camposValidos.tipo_perfil = datos.tipoPerfil;
-  if (datos.coordinador_id !== undefined) camposValidos.coordinador_id = datos.coordinador_id;
-  if (datos.coordinadorId !== undefined) camposValidos.coordinador_id = datos.coordinadorId;
+  if (datos.coordinador_id !== undefined) camposValidos.coordinador_id = datos.coordinador_id || null;
+  if (datos.coordinadorId !== undefined) camposValidos.coordinador_id = datos.coordinadorId || null;
   if (datos.codigo !== undefined) camposValidos.codigo = datos.codigo;
 
   const { data, error } = await supabase
