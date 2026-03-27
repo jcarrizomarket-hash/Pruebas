@@ -299,7 +299,7 @@ app.get('/informes/camarero', async (c) => {
 });
 
 // ============== CONFIRMACIONES ==============
-aapp.post('/guardar-token', async (c) => {
+app.post('/guardar-token', async (c) => {
   try {
     const { token, pedidoId, camareroId, coordinadorId } = await c.req.json();
     

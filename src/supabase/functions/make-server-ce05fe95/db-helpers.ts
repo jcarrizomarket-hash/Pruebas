@@ -123,9 +123,37 @@ export async function crearCamarero(supabase: SupabaseClient, datos: any) {
 }
 
 export async function actualizarCamarero(supabase: SupabaseClient, id: string, datos: any) {
+  const camposValidos: any = {};
+
+  if (datos.nombre !== undefined) camposValidos.nombre = datos.nombre;
+  if (datos.apellido !== undefined) camposValidos.apellido = datos.apellido;
+  if (datos.email !== undefined) camposValidos.email = datos.email;
+  if (datos.telefono !== undefined) camposValidos.telefono = datos.telefono;
+  if (datos.categoria !== undefined) camposValidos.categoria = datos.categoria;
+  if (datos.experiencia !== undefined) camposValidos.experiencia = datos.experiencia;
+  if (datos.disponibilidad !== undefined) {
+  camposValidos.disponibilidad = Array.isArray(datos.disponibilidad)
+    ? JSON.stringify(datos.disponibilidad)
+    : datos.disponibilidad;
+}
+  if (datos.estado !== undefined) camposValidos.estado = datos.estado;
+  if (datos.comentarios !== undefined) camposValidos.comentarios = datos.comentarios;
+  if (datos.certificaciones !== undefined) camposValidos.certificaciones = datos.certificaciones;
+  if (datos.especialidades !== undefined) camposValidos.especialidades = datos.especialidades;
+  if (datos.idiomas !== undefined) camposValidos.idiomas = datos.idiomas;
+  if (datos.otras_certificaciones !== undefined) camposValidos.otras_certificaciones = datos.otras_certificaciones;
+  if (datos.otrasCertificaciones !== undefined) camposValidos.otras_certificaciones = datos.otrasCertificaciones;
+  if (datos.otros_idiomas !== undefined) camposValidos.otros_idiomas = datos.otros_idiomas;
+  if (datos.otrosIdiomas !== undefined) camposValidos.otros_idiomas = datos.otrosIdiomas;
+  if (datos.tipo_perfil !== undefined) camposValidos.tipo_perfil = datos.tipo_perfil;
+  if (datos.tipoPerfil !== undefined) camposValidos.tipo_perfil = datos.tipoPerfil;
+  if (datos.coordinador_id !== undefined) camposValidos.coordinador_id = datos.coordinador_id;
+  if (datos.coordinadorId !== undefined) camposValidos.coordinador_id = datos.coordinadorId;
+  if (datos.codigo !== undefined) camposValidos.codigo = datos.codigo;
+
   const { data, error } = await supabase
     .from('camareros')
-    .update(datos)
+    .update(camposValidos)
     .eq('id', id)
     .select()
     .single();
