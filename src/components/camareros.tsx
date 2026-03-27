@@ -254,6 +254,15 @@ export function Camareros({ camareros, setCamareros, pedidos = [], coordinadores
         headers: getWriteHeaders(),
         body: JSON.stringify(body)
       });
+
+      // FIX: capturar el error real del servidor antes de parsear JSON
+      if (!response.ok) {
+        const rawText = await response.text();
+        console.error(`HTTP ${response.status} error:`, rawText);
+        alert(`Error del servidor (${response.status}):\n${rawText.substring(0, 300)}`);
+        return;
+      }
+
       const result = await response.json();
       if (result.success) {
         if (!editingCamarero && formData.email && formData.telefono) {
@@ -291,11 +300,16 @@ export function Camareros({ camareros, setCamareros, pedidos = [], coordinadores
         await cargarDatos();
         resetForm();
       } else {
-        alert('Error al guardar: ' + (result.error || 'Error desconocido'));
+        // FIX: mostrar el error real en lugar de [object Object]
+        const errorMsg = typeof result.error === 'object'
+          ? JSON.stringify(result.error, null, 2)
+          : (result.error || result.message || 'Error desconocido');
+        console.error('Server error detail:', result);
+        alert('Error al guardar:\n' + errorMsg);
       }
     } catch (error) {
-      console.log('Error:', error);
-      alert('Error de conexión al guardar');
+      console.error('Error:', error);
+      alert('Error de conexión al guardar:\n' + (error instanceof Error ? error.message : String(error)));
     } finally {
       setIsSubmitting(false);
     }
