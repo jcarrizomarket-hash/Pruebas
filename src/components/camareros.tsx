@@ -591,7 +591,7 @@ export function Camareros({ camareros, setCamareros, pedidos = [], coordinadores
            <AlertTriangle className="w-8 h-8 text-amber-600" />
            <div>
              <h3 className="text-amber-800 font-bold text-lg">Ranking de Apercibidos</h3>
-             <p className="text-amber-700 text-sm">Estos camareros no aparecerán en las listas de asignación hasta que sean reactivados.</p>
+             <p className="text-amber-700 text-sm">Estos empleados no aparecerán en las listas de asignación hasta que sean reactivados.</p>
            </div>
         </div>
       )}
@@ -768,7 +768,7 @@ export function Camareros({ camareros, setCamareros, pedidos = [], coordinadores
             <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <Users className="w-8 h-8 text-gray-400" />
             </div>
-            <p className="text-gray-500 text-lg">No hay camareros en esta lista</p>
+            <p className="text-gray-500 text-lg">No hay empleados en esta lista</p>
           </div>
         ) : (
           <div className="divide-y divide-gray-100">
