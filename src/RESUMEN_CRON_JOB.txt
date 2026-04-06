@@ -1,0 +1,149 @@
+═══════════════════════════════════════════════════════════════════════
+  ⏰ CONFIGURAR CRON JOB PARA ALERTAS AUTOMÁTICAS
+═══════════════════════════════════════════════════════════════════════
+
+✅ EL SISTEMA DE ALERTAS YA ESTÁ IMPLEMENTADO
+   Solo falta configurar la ejecución automática cada hora
+
+═══════════════════════════════════════════════════════════════════════
+  🎯 OPCIÓN RECOMENDADA: Cron-job.org (5 MINUTOS)
+═══════════════════════════════════════════════════════════════════════
+
+PASO 1: Ir a https://cron-job.org y crear cuenta
+
+PASO 2: Crear nuevo cronjob con estos datos:
+
+  Title: 
+    Alertas de Servicio 3 Horas
+
+  URL: 
+    https://nkwqaekswfwfpukqfzpk.supabase.co/functions/v1/make-server-ce05fe95/verificar-alertas-servicios
+
+  Schedule: 
+    0 * * * *  (cada hora en punto)
+
+  Method: 
+    GET
+
+  Headers:
+    Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5rd3FhZWtzd2Z3ZnB1a3FmenBrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzMyMzU1NTMsImV4cCI6MjA0ODgxMTU1M30.wvHFcIVEvUiWRKiVRWQPpUDpO-d03PKa1O7iDuJWD6w
+
+PASO 3: Guardar y probar con el botón ▶️
+
+═══════════════════════════════════════════════════════════════════════
+  📚 ARCHIVOS DE AYUDA CREADOS
+═══════════════════════════════════════════════════════════════════════
+
+📄 /GUIA_RAPIDA_CRON_JOB.md
+   → Guía paso a paso con capturas visuales (5 min)
+
+📄 /CRON_JOB_OPCIONES.md
+   → 8 opciones diferentes de cron job (elige la que prefieras)
+
+📄 /GITHUB_ACTIONS_SETUP.md
+   → Si usas GitHub (configuración automática)
+
+📄 /SISTEMA_ALERTAS_3_HORAS.md
+   → Documentación técnica completa del sistema
+
+📄 /test-cron-manual.sh
+   → Script para probar el endpoint manualmente
+
+═══════════════════════════════════════════════════════════════════════
+  🧪 PROBAR EL SISTEMA AHORA
+═══════════════════════════════════════════════════════════════════════
+
+Opción 1 - Desde la Interfaz:
+  1. Ve a Configuración → 🔔 Alertas de Servicio
+  2. Clic en "Verificar Alertas Ahora"
+  3. Ver resultado
+
+Opción 2 - Con el Script:
+  bash test-cron-manual.sh
+
+Opción 3 - Crear Pedido de Prueba:
+  1. Crear pedido con fecha HOY
+  2. Hora de entrada: hora actual + 3 horas
+  3. Asignar perfil y marcar como "confirmado"
+  4. Ejecutar verificación
+
+═══════════════════════════════════════════════════════════════════════
+  🔍 VERIFICAR QUE FUNCIONA
+═══════════════════════════════════════════════════════════════════════
+
+Después de configurar el cron job:
+
+✓ El cron job aparece en la lista de cron-job.org
+✓ Status: "Enabled" ✅
+✓ La prueba manual fue exitosa (HTTP 200)
+✓ En la siguiente hora, se ejecuta automáticamente
+✓ Los perfiles reciben WhatsApp y Email 3h antes del servicio
+
+═══════════════════════════════════════════════════════════════════════
+  ⚡ OTRAS OPCIONES RÁPIDAS
+═══════════════════════════════════════════════════════════════════════
+
+Si no quieres usar Cron-job.org:
+
+→ EasyCron (https://www.easycron.com)
+  Similar a Cron-job.org
+
+→ GitHub Actions
+  Si tu código está en GitHub, se configura solo
+  Ver: /GITHUB_ACTIONS_SETUP.md
+
+→ Zapier (https://zapier.com)
+  Visual, sin código, 100 tareas/mes gratis
+
+→ Make (https://make.com)
+  Como Zapier pero con 1,000 operaciones/mes gratis
+
+Ver todas las opciones en: /CRON_JOB_OPCIONES.md
+
+═══════════════════════════════════════════════════════════════════════
+  📊 RESUMEN TÉCNICO
+═══════════════════════════════════════════════════════════════════════
+
+Endpoint: 
+  GET /verificar-alertas-servicios
+
+Frecuencia recomendada: 
+  Cada hora (0 * * * *)
+
+Autenticación: 
+  Header Authorization con Bearer token
+
+Respuesta exitosa:
+  {
+    "success": true,
+    "alertasEnviadas": 2,
+    "serviciosProcesados": 1
+  }
+
+Logs: 
+  • Consola del navegador (F12)
+  • Panel de cron-job.org
+  • Configuración → Alertas de Servicio (en la app)
+
+═══════════════════════════════════════════════════════════════════════
+  🎉 ¡TODO LISTO!
+═══════════════════════════════════════════════════════════════════════
+
+1. ✅ Sistema de alertas implementado y funcionando
+2. ✅ Endpoint operativo y probado
+3. ✅ Interfaz de configuración creada
+4. ⏰ PENDIENTE: Configurar cron job (5 minutos)
+
+SIGUIENTE PASO:
+  → Ve a https://cron-job.org
+  → Sigue la guía en /GUIA_RAPIDA_CRON_JOB.md
+  → ¡Listo en 5 minutos!
+
+═══════════════════════════════════════════════════════════════════════
+
+¿Necesitas ayuda? Lee:
+  • /GUIA_RAPIDA_CRON_JOB.md (paso a paso visual)
+  • /CRON_JOB_OPCIONES.md (8 opciones diferentes)
+  • /SISTEMA_ALERTAS_3_HORAS.md (documentación completa)
+
+═══════════════════════════════════════════════════════════════════════

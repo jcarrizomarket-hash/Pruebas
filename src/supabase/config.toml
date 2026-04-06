@@ -1,0 +1,5 @@
+[project]
+name = "make-server-ce05fe95"
+
+[functions.make-server-ce05fe95]
+verify_jwt = false

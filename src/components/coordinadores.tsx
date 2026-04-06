@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Plus, Pencil, Trash2 } from 'lucide-react';
-import { getReadHeaders, getWriteHeaders } from '../utils/api-headers';
 
 interface CoordinadoresProps {
   coordinadores: any[];
@@ -30,7 +29,10 @@ export function Coordinadores({ coordinadores, setCoordinadores, baseUrl, public
         // Actualizar coordinador existente
         const response = await fetch(`${baseUrl}/coordinadores/${editingCoordinador.id}`, {
           method: 'PUT',
-          headers: getWriteHeaders(),
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${publicAnonKey}`
+          },
           body: JSON.stringify({
             ...editingCoordinador,
             nombre,
@@ -52,7 +54,10 @@ export function Coordinadores({ coordinadores, setCoordinadores, baseUrl, public
         // Crear nuevo coordinador
         const response = await fetch(`${baseUrl}/coordinadores`, {
           method: 'POST',
-          headers: getWriteHeaders(),
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${publicAnonKey}`
+          },
           body: JSON.stringify({ nombre, telefono, email })
         });
         
@@ -86,7 +91,9 @@ export function Coordinadores({ coordinadores, setCoordinadores, baseUrl, public
     try {
       const response = await fetch(`${baseUrl}/coordinadores/${coordinador.id}`, {
         method: 'DELETE',
-        headers: getReadHeaders()
+        headers: {
+          Authorization: `Bearer ${publicAnonKey}`
+        }
       });
       
       const result = await response.json();

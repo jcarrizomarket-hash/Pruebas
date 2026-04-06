@@ -27,12 +27,12 @@ export async function requireFunctionSecret(c: Context, next: () => Promise<void
   }
 
   // Obtener el secret del entorno
-  const expectedSecret = Deno.env.get('FN_SECRET');
+  const expectedSecret = Deno.env.get('SUPABASE_FN_SECRET');
   
   // Si no hay secret configurado, registrar advertencia pero permitir la petición
   // (útil para desarrollo local)
   if (!expectedSecret) {
-    console.warn('⚠️ FN_SECRET no está configurado. Se recomienda configurarlo en producción.');
+    console.warn('⚠️ SUPABASE_FN_SECRET no está configurado. Se recomienda configurarlo en producción.');
     return next();
   }
 

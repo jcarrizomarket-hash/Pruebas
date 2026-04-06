@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { Printer, Mail, X, Send, FileText, User, AtSign, MessageSquare, CheckCircle, AlertCircle, Eye } from 'lucide-react';
 import { projectId } from '../utils/supabase/info';
 import { EmailConfigStatus } from './email-config-status';
-import { getReadHeaders, getWriteHeaders } from '../utils/api-headers';
 
 export function EnvioParte({ pedidos, camareros, coordinadores, clientes, baseUrl, publicAnonKey }) {
   const [selectedPedido, setSelectedPedido] = useState(null);
@@ -138,7 +137,7 @@ export function EnvioParte({ pedidos, camareros, coordinadores, clientes, baseUr
               onClick={async () => {
                 try {
                   const response = await fetch(`${baseUrl}/verificar-email-config`, {
-                    headers: getReadHeaders()
+                    headers: { Authorization: `Bearer ${publicAnonKey}` }
                   });
                   const data = await response.json();
                   console.log('🔍 DIAGNÓSTICO COMPLETO:', data);
@@ -441,7 +440,10 @@ export function EnvioParte({ pedidos, camareros, coordinadores, clientes, baseUr
                   
                   const response = await fetch(`${baseUrl}/enviar-email-parte`, {
                     method: 'POST',
-                    headers: getWriteHeaders(),
+                    headers: {
+                      'Content-Type': 'application/json',
+                      Authorization: `Bearer ${publicAnonKey}`
+                    },
                     body: JSON.stringify({
                       destinatario: emailData.destinatario,
                       cc: emailData.copiaCoordinador && emailData.emailCoordinador.trim() ? emailData.emailCoordinador.trim() : null,

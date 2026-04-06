@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { Key, CheckCircle, XCircle, RefreshCw, ExternalLink, AlertTriangle, Copy, Check } from 'lucide-react';
-import { getReadHeaders, getWriteHeaders } from '../utils/api-headers';
 
 interface WhatsAppConfigProps {
   baseUrl: string;
@@ -22,8 +21,18 @@ export function WhatsAppConfig({ baseUrl, publicAnonKey }: WhatsAppConfigProps) 
     setChecking(true);
     try {
       const response = await fetch(`${baseUrl}/verificar-whatsapp-config`, {
-        headers: getReadHeaders()
+        headers: {
+          Authorization: `Bearer ${publicAnonKey}`
+        }
       });
+      
+      if (!response.ok) {
+        console.error('❌ Error de respuesta del servidor:', response.status, response.statusText);
+        setMessage('❌ Error de conexión con el servidor');
+        setIsConfigured(false);
+        return;
+      }
+      
       const result = await response.json();
       setIsConfigured(result.configured);
       setConfigDetails(result);
@@ -37,7 +46,9 @@ export function WhatsAppConfig({ baseUrl, publicAnonKey }: WhatsAppConfigProps) 
       }
     } catch (error) {
       console.error('Error al verificar configuración:', error);
-      setMessage('❌ Error al verificar configuración');
+      const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+      setMessage(`❌ Error: ${errorMessage}`);
+      setIsConfigured(false);
     } finally {
       setChecking(false);
     }

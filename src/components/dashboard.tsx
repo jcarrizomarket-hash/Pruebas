@@ -22,8 +22,6 @@ import {
   Settings
 } from 'lucide-react';
 import { WhatsAppConfigStatus } from './whatsapp-config-status';
-import { getReadHeaders, getWriteHeaders } from '../utils/api-headers';
-import { employeeLabel as genericLabel, maxEmployees as maxEmployees } from '../config/env';
 
 interface DashboardProps {
   camareros: any[];
@@ -43,7 +41,7 @@ export function Dashboard({ camareros, pedidos, setActiveTab, baseUrl, publicAno
   const cargarClientes = async () => {
     try {
       const response = await fetch(`${baseUrl}/clientes`, {
-        headers: getReadHeaders()
+        headers: { Authorization: `Bearer ${publicAnonKey}` }
       });
       const data = await response.json();
       if (data.success) setClientes(data.data);
@@ -218,28 +216,28 @@ export function Dashboard({ camareros, pedidos, setActiveTab, baseUrl, publicAno
       action: () => setActiveTab('pedidos')
     },
     {
-      title: 'Empleados Disponibles',
+      title: 'Camareros Disponibles',
       icon: UserCheck,
       color: 'green',
       action: () => setActiveTab('camareros'),
       count: metrics.camarerosDisponibles
     },
     {
-      title: 'Empleados Apercibidos',
+      title: 'Camareros Apercibidos',
       icon: UserX,
       color: 'red',
       action: () => setActiveTab('camareros'),
       count: metrics.camarerosApercibidos
     },
     {
-      title: 'Empleados Activos',
+      title: 'Camareros Activos',
       icon: Users,
       color: 'teal',
       action: () => setActiveTab('camareros'),
       count: metrics.camarerosActivos
     },
     {
-      title: 'Empleados en Reserva',
+      title: 'Camareros en Reserva',
       icon: Shield,
       color: 'orange',
       action: () => setActiveTab('camareros'),
@@ -303,7 +301,7 @@ export function Dashboard({ camareros, pedidos, setActiveTab, baseUrl, publicAno
       {/* Bienvenida */}
       <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl shadow-lg p-8 text-white">
         <h1 className="text-3xl font-bold mb-2">Dashboard de Gestión</h1>
-        <p className="text-blue-100">Resumen general de eventos, empleados y operaciones</p>
+        <p className="text-blue-100">Resumen general de eventos, camareros y operaciones</p>
       </div>
 
       {/* Métricas de Eventos */}
@@ -327,7 +325,7 @@ export function Dashboard({ camareros, pedidos, setActiveTab, baseUrl, publicAno
             <div className="flex items-center justify-between pt-4 border-t border-blue-300">
               <div className="flex items-center gap-2">
                 <Users className="w-4 h-4 text-blue-600" />
-                <span className="text-sm text-blue-700 font-medium">Empleados necesarios</span>
+                <span className="text-sm text-blue-700 font-medium">Camareros necesarios</span>
               </div>
               <span className="text-xl font-bold text-blue-900">{metrics.camarerosNecesariosDiario}</span>
             </div>
@@ -347,7 +345,7 @@ export function Dashboard({ camareros, pedidos, setActiveTab, baseUrl, publicAno
             <div className="flex items-center justify-between pt-4 border-t border-purple-300">
               <div className="flex items-center gap-2">
                 <Users className="w-4 h-4 text-purple-600" />
-                <span className="text-sm text-purple-700 font-medium">Empleados necesarios</span>
+                <span className="text-sm text-purple-700 font-medium">Camareros necesarios</span>
               </div>
               <span className="text-xl font-bold text-purple-900">{metrics.camarerosNecesariosSemanal}</span>
             </div>
@@ -367,7 +365,7 @@ export function Dashboard({ camareros, pedidos, setActiveTab, baseUrl, publicAno
             <div className="flex items-center justify-between pt-4 border-t border-indigo-300">
               <div className="flex items-center gap-2">
                 <Users className="w-4 h-4 text-indigo-600" />
-                <span className="text-sm text-indigo-700 font-medium">Empleados necesarios</span>
+                <span className="text-sm text-indigo-700 font-medium">Camareros necesarios</span>
               </div>
               <span className="text-xl font-bold text-indigo-900">{metrics.camarerosNecesariosMensual}</span>
             </div>
@@ -379,7 +377,7 @@ export function Dashboard({ camareros, pedidos, setActiveTab, baseUrl, publicAno
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
         <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
           <Users className="w-6 h-6 text-purple-600" />
-          Estado de Empleados
+          Estado de Camareros
         </h2>
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
           <div className="bg-gray-50 rounded-lg p-4 border border-gray-200 text-center">
@@ -468,7 +466,7 @@ export function Dashboard({ camareros, pedidos, setActiveTab, baseUrl, publicAno
       </div>
 
       {/* Indicadores de Alerta */}
-      {(metrics.mensajesSinEnviar > 0 || metrics.mensajesSinConfirmar > maxEmployees || metrics.camarerosApercibidos > 0) && (
+      {(metrics.mensajesSinEnviar > 0 || metrics.mensajesSinConfirmar > 5 || metrics.camarerosApercibidos > 0) && (
         <div className="bg-yellow-50 border-l-4 border-yellow-400 p-6 rounded-lg shadow-sm">
           <div className="flex items-start gap-3">
             <AlertCircle className="w-6 h-6 text-yellow-600 flex-shrink-0 mt-1" />

@@ -339,7 +339,10 @@ id              UUID PRIMARY KEY
 codigo          VARCHAR UNIQUE (CLI001, CLI002...)
 nombre          VARCHAR
 empresa         VARCHAR
-email           VARCHAR
+contacto_1      VARCHAR
+contacto_2      VARCHAR
+mail_1          VARCHAR
+mail_2          VARCHAR
 telefono        VARCHAR
 direccion       TEXT
 created_at      TIMESTAMP

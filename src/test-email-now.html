@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚀 Prueba de Email - Sistema de Gestión</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 600px;
+            width: 100%;
+            padding: 40px;
+        }
+        
+        h1 {
+            color: #1f2937;
+            margin-bottom: 10px;
+            font-size: 28px;
+            text-align: center;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #6b7280;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        
+        .status {
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        
+        .status.info {
+            background: #dbeafe;
+            border: 2px solid #3b82f6;
+            color: #1e40af;
+        }
+        
+        .status.success {
+            background: #d1fae5;
+            border: 2px solid #10b981;
+            color: #065f46;
+        }
+        
+        .status.error {
+            background: #fee2e2;
+            border: 2px solid #ef4444;
+            color: #991b1b;
+        }
+        
+        .status.loading {
+            background: #fef3c7;
+            border: 2px solid #f59e0b;
+            color: #92400e;
+        }
+        
+        .input-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            color: #374151;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        input, textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        
+        textarea {
+            resize: vertical;
+            font-family: inherit;
+        }
+        
+        button {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        button:active:not(:disabled) {
+            transform: translateY(0);
+        }
+        
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .spinner {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2px solid white;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+            margin-right: 8px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .logs {
+            background: #1f2937;
+            color: #10b981;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .log-line {
+            margin-bottom: 5px;
+        }
+        
+        .tips {
+            background: #f3f4f6;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            font-size: 13px;
+            color: #4b5563;
+        }
+        
+        .tips ul {
+            margin-left: 20px;
+            margin-top: 10px;
+        }
+        
+        .tips li {
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Prueba de Email</h1>
+        <p class="subtitle">Sistema de Gestión de Perfiles para Eventos</p>
+        
+        <div id="status" class="status info">
+            ℹ️ Sistema listo para enviar email de prueba
+        </div>
+        
+        <form id="emailForm">
+            <div class="input-group">
+                <label for="to">📧 Destinatario (Email)</label>
+                <input 
+                    type="email" 
+                    id="to" 
+                    value="barjupiterbcn@gmail.com" 
+                    required
+                    placeholder="tu-email@ejemplo.com"
+                >
+                <small style="color: #6b7280; font-size: 12px; display: block; margin-top: 5px;">
+                    ⚠️ En modo sandbox, solo puedes enviar a: barjupiterbcn@gmail.com
+                </small>
+            </div>
+            
+            <div class="input-group">
+                <label for="subject">📝 Asunto</label>
+                <input 
+                    type="text" 
+                    id="subject" 
+                    value="✅ Prueba de Email - Sistema Funcionando" 
+                    required
+                >
+            </div>
+            
+            <div class="input-group">
+                <label for="mensaje">💬 Mensaje</label>
+                <textarea 
+                    id="mensaje" 
+                    rows="4" 
+                    required
+                >Este es un email de prueba del sistema.
+
+Si recibes este mensaje, tu configuración de email está funcionando correctamente.
+
+El sistema está listo para enviar partes de servicio automáticamente.</textarea>
+            </div>
+            
+            <button type="submit" id="sendBtn">
+                Enviar Email de Prueba
+            </button>
+        </form>
+        
+        <div id="logs" class="logs" style="display: none;"></div>
+        
+        <div class="tips">
+            <strong>💡 Tips:</strong>
+            <ul>
+                <li>El email puede tardar 5-10 segundos en enviarse</li>
+                <li>Revisa tu carpeta de Spam si no lo ves</li>
+                <li>Los emails de <code>onboarding@resend.dev</code> suelen ir a Spam</li>
+                <li>Verifica en <a href="https://resend.com/emails" target="_blank" style="color: #3b82f6;">resend.com/emails</a></li>
+            </ul>
+        </div>
+    </div>
+    
+    <script>
+        const form = document.getElementById('emailForm');
+        const statusDiv = document.getElementById('status');
+        const logsDiv = document.getElementById('logs');
+        const sendBtn = document.getElementById('sendBtn');
+        
+        const baseUrl = 'https://nkwqaekswfwfpukqfzpk.supabase.co/functions/v1/make-server-ce05fe95';
+        const publicAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5rd3FhZWtzd2Z3ZnB1a3FmenBrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzMyMzU1NTMsImV4cCI6MjA0ODgxMTU1M30.wvHFcIVEvUiWRKiVRWQPpUDpO-d03PKa1O7iDuJWD6w';
+        
+        function addLog(message, type = 'info') {
+            logsDiv.style.display = 'block';
+            const timestamp = new Date().toLocaleTimeString('es-ES');
+            const emoji = type === 'success' ? '✅' : type === 'error' ? '❌' : '📝';
+            logsDiv.innerHTML += `<div class="log-line">[${timestamp}] ${emoji} ${message}</div>`;
+            logsDiv.scrollTop = logsDiv.scrollHeight;
+        }
+        
+        function updateStatus(message, type) {
+            statusDiv.className = `status ${type}`;
+            statusDiv.innerHTML = message;
+        }
+        
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const to = document.getElementById('to').value;
+            const subject = document.getElementById('subject').value;
+            const mensaje = document.getElementById('mensaje').value;
+            
+            // Limpiar logs
+            logsDiv.innerHTML = '';
+            
+            // Actualizar UI
+            sendBtn.disabled = true;
+            sendBtn.innerHTML = '<span class="spinner"></span> Enviando email...';
+            updateStatus('⏳ Enviando email de prueba...', 'loading');
+            
+            addLog('Iniciando envío de email...');
+            addLog(`Destinatario: ${to}`);
+            addLog(`Asunto: ${subject}`);
+            
+            try {
+                // Construir HTML del email
+                const html = `
+                    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #f5f5f5;">
+                        <div style="background: white; border: 3px solid #10b981; padding: 30px; border-radius: 15px;">
+                            <h1 style="color: #10b981; text-align: center; margin-bottom: 20px; font-size: 28px;">
+                                ✅ PRUEBA DE EMAIL EXITOSA
+                            </h1>
+                            
+                            <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                                <p style="font-size: 16px; color: #374151; margin-bottom: 15px; white-space: pre-line;">
+                                    ${mensaje}
+                                </p>
+                            </div>
+                            
+                            <div style="background: #f0fdf4; border: 2px solid #10b981; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                                <p style="margin: 0 0 10px 0; font-weight: bold; color: #065f46;">🎉 Componentes Verificados:</p>
+                                <ul style="margin: 0; padding-left: 20px; color: #059669;">
+                                    <li>✓ Servidor Backend Funcionando</li>
+                                    <li>✓ Proveedor Resend Conectado</li>
+                                    <li>✓ Función wrapper enviarEmail Creada</li>
+                                    <li>✓ Formato HTML Activo</li>
+                                    <li>✓ Endpoint /enviar-email Operativo</li>
+                                </ul>
+                            </div>
+                            
+                            <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+                                <thead>
+                                    <tr>
+                                        <th style="border: 2px solid #10b981; padding: 12px; background: #10b981; color: white; text-align: left;">
+                                            Sistema
+                                        </th>
+                                        <th style="border: 2px solid #10b981; padding: 12px; background: #10b981; color: white; text-align: left;">
+                                            Estado
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td style="border: 2px solid #10b981; padding: 10px;">Backend</td>
+                                        <td style="border: 2px solid #10b981; padding: 10px; color: #10b981; font-weight: bold;">✅ OK</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="border: 2px solid #10b981; padding: 10px;">Email Provider</td>
+                                        <td style="border: 2px solid #10b981; padding: 10px; color: #10b981; font-weight: bold;">✅ Resend</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="border: 2px solid #10b981; padding: 10px;">Formato HTML</td>
+                                        <td style="border: 2px solid #10b981; padding: 10px; color: #10b981; font-weight: bold;">✅ Activo</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            
+                            <div style="margin-top: 30px; padding-top: 20px; border-top: 2px solid #e5e7eb; text-align: center;">
+                                <p style="color: #6b7280; font-size: 14px; margin: 5px 0;">
+                                    <strong>Sistema de Gestión de Perfiles</strong>
+                                </p>
+                                <p style="color: #9ca3af; font-size: 12px; margin: 5px 0;">
+                                    Email de prueba enviado el ${new Date().toLocaleString('es-ES')}
+                                </p>
+                                <p style="color: #9ca3af; font-size: 12px; margin: 5px 0;">
+                                    Remitente: onboarding@resend.dev
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                addLog('Enviando petición al servidor...');
+                
+                const response = await fetch(`${baseUrl}/enviar-email`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${publicAnonKey}`
+                    },
+                    body: JSON.stringify({
+                        to,
+                        subject,
+                        mensaje,
+                        html
+                    })
+                });
+                
+                addLog(`Respuesta del servidor recibida: ${response.status} ${response.statusText}`);
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    addLog('Email enviado exitosamente', 'success');
+                    addLog(`Proveedor: ${result.provider || 'Resend'}`, 'success');
+                    if (result.messageId) {
+                        addLog(`Message ID: ${result.messageId}`, 'success');
+                    }
+                    
+                    updateStatus(
+                        `✅ ¡Email enviado exitosamente!<br><br>` +
+                        `<strong>Revisa tu bandeja de entrada en:</strong><br>${to}<br><br>` +
+                        `<small>Si no lo ves, revisa Spam o Promociones</small>`,
+                        'success'
+                    );
+                    
+                    // Limpiar formulario
+                    form.reset();
+                } else {
+                    addLog(`Error: ${result.error}`, 'error');
+                    updateStatus(`❌ Error al enviar: ${result.error}`, 'error');
+                }
+            } catch (error) {
+                addLog(`Error de red: ${error.message}`, 'error');
+                updateStatus(`❌ Error de conexión: ${error.message}`, 'error');
+                console.error('Error completo:', error);
+            } finally {
+                sendBtn.disabled = false;
+                sendBtn.innerHTML = 'Enviar Email de Prueba';
+            }
+        });
+        
+        // Verificar configuración al cargar
+        window.addEventListener('load', async () => {
+            try {
+                addLog('Verificando configuración del sistema...');
+                const response = await fetch(`${baseUrl}/verificar-email-config`, {
+                    headers: {
+                        'Authorization': `Bearer ${publicAnonKey}`
+                    }
+                });
+                const config = await response.json();
+                
+                if (config.configured) {
+                    addLog(`Configuración OK - Proveedor: ${config.servicioActivo}`, 'success');
+                    addLog(`Remitente: ${config.emailFrom}`, 'success');
+                    if (config.sandboxMode) {
+                        addLog('⚠️ Modo Sandbox activo - Solo enviar a: barjupiterbcn@gmail.com');
+                    }
+                } else {
+                    addLog('⚠️ Email no configurado correctamente', 'error');
+                }
+            } catch (error) {
+                addLog('Error al verificar configuración', 'error');
+            }
+        });
+    </script>
+</body>
+</html>

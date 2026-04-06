@@ -45,7 +45,7 @@ if not exist ".supabase\config.toml" (
 )
 
 echo Desplegando make-server-ce05fe95...
-supabase functions deploy make-server-ce05fe95
+supabase functions deploy make-server-ce05fe95 --no-verify-jwt
 
 echo ✅ Edge Function desplegada exitosamente
 echo.

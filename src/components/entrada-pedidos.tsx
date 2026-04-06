@@ -1,6 +1,5 @@
 import { useState, useMemo } from 'react';
 import { Plus, MapPin, Calendar as CalendarIcon, Clock, Users, Edit2, Trash2, X, ChevronLeft, ChevronRight, Check, AlertCircle, BarChart3, TrendingUp, UserCheck, AlertTriangle, Send, Mail } from 'lucide-react';
-import { getReadHeaders, getWriteHeaders } from '../utils/api-headers';
 
 export function EntradaPedidos({ clientes, setClientes, pedidos, setPedidos, camareros = [], coordinadores = [], baseUrl, publicAnonKey, cargarDatos }) {
   const [showForm, setShowForm] = useState(false);
@@ -209,24 +208,24 @@ export function EntradaPedidos({ clientes, setClientes, pedidos, setPedidos, cam
       setEditingId(pedido.id);
       setFormData({
         numero: pedido.numero || '',
-        cliente: pedido.cliente,
-        lugar: pedido.lugar,
+        cliente: pedido.cliente || '',
+        lugar: pedido.lugar || '',
         ubicacion: pedido.ubicacion || '',
-        diaEvento: pedido.diaEvento,
+        diaEvento: pedido.diaEvento || '',
         
-        cantidadCamareros: pedido.cantidadCamareros,
-        horaEntrada: pedido.horaEntrada,
-        horaSalida: pedido.horaSalida,
-        totalHoras: pedido.totalHoras,
+        cantidadCamareros: pedido.cantidadCamareros || pedido.cantidad_camareros || 1,
+        horaEntrada: pedido.horaEntrada || pedido.hora_entrada || '',
+        horaSalida: pedido.horaSalida || pedido.hora_salida || '',
+        totalHoras: pedido.totalHoras || '',
         
         cantidadCamareros2: pedido.cantidadCamareros2 || 0,
         horaEntrada2: pedido.horaEntrada2 || '',
         horaSalida2: pedido.horaSalida2 || '',
         totalHoras2: pedido.totalHoras2 || '',
         
-        catering: pedido.catering,
-        camisa: pedido.camisa,
-        notas: pedido.notas || '',
+        catering: pedido.catering || 'no',
+        camisa: pedido.camisa || 'negra',
+        notas: pedido.notas || pedido.observaciones || '',
         coordinadorId: pedido.coordinadorId || '',
         coordinadorNombre: pedido.coordinadorNombre || ''
       });
@@ -243,7 +242,7 @@ export function EntradaPedidos({ clientes, setClientes, pedidos, setPedidos, cam
       
       const response = await fetch(`${baseUrl}/pedidos/${id}`, {
         method: 'DELETE',
-        headers: getReadHeaders()
+        headers: { Authorization: `Bearer ${publicAnonKey}` }
       });
       
       const result = await response.json();
@@ -321,7 +320,11 @@ _Por favor confirme recepción de este mensaje._`;
       // Asegurar número de pedido si es nuevo
       const dataToSend = {
         ...formData,
-        numero: editingId ? formData.numero : generarNumeroPedido()
+        numero: editingId ? formData.numero : generarNumeroPedido(),
+        // Asegurar que los campos numéricos sean números válidos
+        cantidadCamareros: Number(formData.cantidadCamareros) || 1,
+        cantidadCamareros2: Number(formData.cantidadCamareros2) || 0,
+        cantidad_camareros: Number(formData.cantidadCamareros) || 1
       };
 
       // Preservar asignaciones si estamos editando
@@ -334,7 +337,10 @@ _Por favor confirme recepción de este mensaje._`;
 
       const response = await fetch(url, {
         method,
-        headers: getWriteHeaders(),
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${publicAnonKey}`
+        },
         body: JSON.stringify(dataToSend)
       });
       
@@ -529,12 +535,17 @@ _Por favor confirme recepción de este mensaje._`;
                   <h3 className="text-lg font-semibold text-gray-700 border-b pb-2">Información del Evento</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Cliente</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Cliente {editingId && <span className="text-xs text-gray-500">(No modificable)</span>}
+                      </label>
                       <select
                         required
                         value={formData.cliente}
                         onChange={(e) => setFormData({...formData, cliente: e.target.value})}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        disabled={editingId !== null}
+                        className={`w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                          editingId ? 'bg-gray-100 cursor-not-allowed opacity-70' : ''
+                        }`}
                       >
                         <option key="cliente-empty" value="">Seleccionar cliente...</option>
                         {uniqueClientes.map(c => (

@@ -1,7 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { Plus, Edit2, Calendar, Users, UserCheck, UserX, Star, Trash2, AlertTriangle, CheckCircle2, XCircle, Clock, Repeat, CalendarRange, ChevronDown, ChevronUp, Download, Upload } from 'lucide-react';
 import * as XLSX from 'xlsx';
-import { getReadHeaders, getWriteHeaders } from '../utils/api-headers';
 
 const IDIOMAS = ['Castellano', 'Portugués', 'Catalán', 'Inglés', 'Francés', 'Alemán', 'Italiano'];
 const CERTIFICACIONES = ['PRL', 'Manipulación de alimentos', 'Primeros auxilios', 'APPCC', 'RCP'];
@@ -23,29 +22,31 @@ interface CamarerosProps {
   cargarDatos: () => void;
 }
 
-export function Camareros({ camareros, setCamareros, pedidos = [], coordinadores = [], baseUrl, publicAnonKey, cargarDatos }: CamarerosProps) {
+export function Camareros({ camareros, setCamareros, pedidos, coordinadores, baseUrl, publicAnonKey, cargarDatos }) {
+  console.log('🔧 Camareros component v2.7.0 - FORCED REBUILD - Fix disponibilidad array');
+  console.log('📊 Camareros cargados:', camareros.length);
+  console.log('🔍 Primer camarero disponibilidad tipo:', camareros[0] ? typeof camareros[0]?.disponibilidad : 'N/A');
+  
+  const [selectedCamarero, setSelectedCamarero] = useState(null);
+  const [showCalendario, setShowCalendario] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [editingCamarero, setEditingCamarero] = useState(null);
   const [activeFormTab, setActiveFormTab] = useState('general');
-  const [verApercibidos, setVerApercibidos] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // Estados para calendario avanzado
-  const [selectedCamarero, setSelectedCamarero] = useState(null);
-  const [showCalendario, setShowCalendario] = useState(false);
+  const [verApercibidos, setVerApercibidos] = useState(false);
   
   // Estado formulario disponibilidad
-  const [modoDisponibilidad, setModoDisponibilidad] = useState('unica');
+  const [modoDisponibilidad, setModoDisponibilidad] = useState('unica'); // 'unica', 'rango', 'semanal'
   const [fechaInicio, setFechaInicio] = useState('');
   const [fechaFin, setFechaFin] = useState('');
   const [horaInicio, setHoraInicio] = useState('');
   const [horaFin, setHoraFin] = useState('');
-  const [diasSeleccionados, setDiasSeleccionados] = useState([]);
+  const [diasSeleccionados, setDiasSeleccionados] = useState([]); // 0=Domingo, 1=Lunes...
   const [tipoDisponibilidad, setTipoDisponibilidad] = useState('disponible');
 
   const initialFormState = {
     codigo: '',
-    tipoPerfil: 'CAM',
+    tipoPerfil: 'CAM', // Nuevo campo
     nombre: '',
     apellido: '',
     telefono: '',
@@ -89,23 +90,21 @@ export function Camareros({ camareros, setCamareros, pedidos = [], coordinadores
     const hoy = new Date();
     const hoyStr = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-${String(hoy.getDate()).padStart(2, '0')}`;
     
-    // FIX: asegurar que disponibilidad siempre sea array
-    const camarerosSeguros = camareros.map(c => ({
-      ...c,
-      disponibilidad: Array.isArray(c.disponibilidad) ? c.disponibilidad : []
-    }));
-
-    const activos = camarerosSeguros.filter(c => c.estado !== 'apercibido');
+    const activos = camareros.filter(c => c.estado !== 'apercibido');
     const totalActivos = activos.length;
-    const totalApercibidos = camarerosSeguros.filter(c => c.estado === 'apercibido').length;
+    const totalApercibidos = camareros.filter(c => c.estado === 'apercibido').length;
     
     const noDisponiblesIds = new Set(
       activos
-        .filter(c => c.disponibilidad.some(d => d.fecha === hoyStr && d.tipo === 'no-disponible'))
+        .filter(c => {
+          // Manejar disponibilidad como array o string
+          const disp = Array.isArray(c.disponibilidad) ? c.disponibilidad : [];
+          return disp.some(d => d.fecha === hoyStr && d.tipo === 'no-disponible');
+        })
         .map(c => c.id)
     );
     
-    const pedidosHoy = (Array.isArray(pedidos) ? pedidos : []).filter(p => p.diaEvento === hoyStr);
+    const pedidosHoy = pedidos.filter(p => p.diaEvento === hoyStr);
     const asignadosIds = new Set();
     pedidosHoy.forEach(p => {
       if (p.asignaciones) p.asignaciones.forEach(a => asignadosIds.add(a.camareroId));
@@ -163,11 +162,16 @@ export function Camareros({ camareros, setCamareros, pedidos = [], coordinadores
         horario: horarioStr
       });
     } else {
+      // Rango o Semanal
       if (!fechaInicio || !fechaFin) return [];
       const end = new Date(fechaFin);
       
       for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+        // Si es semanal, verificar el día de la semana
         if (modoDisponibilidad === 'semanal') {
+           // getDay(): 0=Domingo, 1=Lunes.
+           // Ajustar según la UI (si la UI usa 1=Lunes, hay que mapear)
+           // Aquí asumiremos que diasSeleccionados guarda lo que retorna getDay() (0-6)
            if (!diasSeleccionados.includes(d.getDay())) continue;
         }
 
@@ -190,8 +194,12 @@ export function Camareros({ camareros, setCamareros, pedidos = [], coordinadores
       return;
     }
 
-    const disponibilidadActual = Array.isArray(selectedCamarero.disponibilidad) ? selectedCamarero.disponibilidad : [];
+    // Asegurar que disponibilidad sea un array
+    const disponibilidadActual = Array.isArray(selectedCamarero.disponibilidad) 
+      ? selectedCamarero.disponibilidad 
+      : [];
     
+    // Filtrar duplicados (si ya existe fecha, la reemplazamos con la nueva)
     const fechasNuevasSet = new Set(nuevasFechas.map(f => f.fecha));
     const disponibilidadFiltrada = disponibilidadActual.filter(d => !fechasNuevasSet.has(d.fecha));
     
@@ -200,11 +208,15 @@ export function Camareros({ camareros, setCamareros, pedidos = [], coordinadores
     try {
       const response = await fetch(`${baseUrl}/camareros/${selectedCamarero.id}`, {
         method: 'PUT',
-        headers: getWriteHeaders(),
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${publicAnonKey}`
+        },
         body: JSON.stringify({ ...selectedCamarero, disponibilidad: disponibilidadFinal })
       });
       if (response.ok) {
         await cargarDatos();
+        // Limpiar formulario disponibilidad
         setFechaInicio('');
         setFechaFin('');
         setDiasSeleccionados([]);
@@ -216,12 +228,19 @@ export function Camareros({ camareros, setCamareros, pedidos = [], coordinadores
 
   const eliminarDisponibilidad = async (fecha) => {
     if (!selectedCamarero) return;
-    const disponibilidadActual = Array.isArray(selectedCamarero.disponibilidad) ? selectedCamarero.disponibilidad : [];
+    // Asegurar que disponibilidad sea un array
+    const disponibilidadActual = Array.isArray(selectedCamarero.disponibilidad) 
+      ? selectedCamarero.disponibilidad 
+      : [];
     const disponibilidad = disponibilidadActual.filter(d => d.fecha !== fecha);
+    
     try {
       const response = await fetch(`${baseUrl}/camareros/${selectedCamarero.id}`, {
         method: 'PUT',
-        headers: getWriteHeaders(),
+        headers: {
+           'Content-Type': 'application/json',
+           Authorization: `Bearer ${publicAnonKey}`
+        },
         body: JSON.stringify({ ...selectedCamarero, disponibilidad })
       });
       if (response.ok) {
@@ -235,6 +254,7 @@ export function Camareros({ camareros, setCamareros, pedidos = [], coordinadores
   const handleSubmit = async (e) => {
     e.preventDefault();
     
+    // Prevenir envíos duplicados
     if (isSubmitting) return;
     
     if (!formData.nombre || !formData.apellido) {
@@ -251,65 +271,19 @@ export function Camareros({ camareros, setCamareros, pedidos = [], coordinadores
     try {
       const response = await fetch(endpoint, {
         method,
-        headers: getWriteHeaders(),
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${publicAnonKey}` },
         body: JSON.stringify(body)
       });
-
-      // FIX: capturar el error real del servidor antes de parsear JSON
-      if (!response.ok) {
-        const rawText = await response.text();
-        console.error(`HTTP ${response.status} error:`, rawText);
-        alert(`Error del servidor (${response.status}):\n${rawText.substring(0, 300)}`);
-        return;
-      }
-
       const result = await response.json();
       if (result.success) {
-        if (!editingCamarero && formData.email && formData.telefono) {
-          try {
-            const bienvenidaRes = await fetch(`${baseUrl}/camareros/bienvenida`, {
-              method: 'POST',
-              headers: getWriteHeaders(),
-              body: JSON.stringify({
-                nombre: formData.nombre,
-                apellido: formData.apellido,
-                email: formData.email,
-                telefono: formData.telefono,
-                camarero_codigo: result.data?.codigo || formData.codigo
-              })
-            });
-            const bienvenidaResult = await bienvenidaRes.json();
-            if (bienvenidaResult.success) {
-              if (bienvenidaResult.whatsapp) {
-                alert(`✅ Perfil creado.\n📱 WhatsApp de bienvenida enviado a ${formData.telefono}`);
-              } else {
-                alert(`✅ Perfil y usuario creados.\n⚠️ WhatsApp no enviado: ${bienvenidaResult.mensaje}`);
-              }
-            } else {
-              alert(`✅ Perfil creado.\n⚠️ No se pudo crear el usuario: ${bienvenidaResult.error}`);
-            }
-          } catch (err) {
-            console.log('Error al enviar bienvenida:', err);
-            alert('✅ Perfil creado.\n⚠️ No se pudo enviar el WhatsApp de bienvenida.');
-          }
-        } else if (!editingCamarero && !formData.email) {
-          alert('✅ Perfil creado.\nℹ️ Sin email: no se creó usuario ni se envió bienvenida.');
-        } else if (!editingCamarero && !formData.telefono) {
-          alert('✅ Perfil creado.\nℹ️ Sin teléfono: no se envió WhatsApp de bienvenida.');
-        }
         await cargarDatos();
         resetForm();
       } else {
-        // FIX: mostrar el error real en lugar de [object Object]
-        const errorMsg = typeof result.error === 'object'
-          ? JSON.stringify(result.error, null, 2)
-          : (result.error || result.message || 'Error desconocido');
-        console.error('Server error detail:', result);
-        alert('Error al guardar:\n' + errorMsg);
+        alert('Error al guardar: ' + (result.error || 'Error desconocido'));
       }
     } catch (error) {
-      console.error('Error:', error);
-      alert('Error de conexión al guardar:\n' + (error instanceof Error ? error.message : String(error)));
+      console.log('Error:', error);
+      alert('Error de conexión al guardar');
     } finally {
       setIsSubmitting(false);
     }
@@ -318,20 +292,20 @@ export function Camareros({ camareros, setCamareros, pedidos = [], coordinadores
   const editarCamarero = (camarero) => {
     setFormData({
       codigo: camarero.codigo || '',
-      tipoPerfil: camarero.tipoPerfil || 'CAM',
+      tipoPerfil: camarero.tipoPerfil || 'CAM', // Nuevo campo
       nombre: camarero.nombre,
       apellido: camarero.apellido,
       telefono: camarero.telefono,
       email: camarero.email,
-      especialidades: Array.isArray(camarero.especialidades) ? camarero.especialidades : [],
+      especialidades: camarero.especialidades || [],
       experiencia: camarero.experiencia || '',
       coordinadorId: camarero.coordinadorId || '',
       comentarios: camarero.comentarios || '',
-      idiomas: Array.isArray(camarero.idiomas) ? camarero.idiomas : [],
+      idiomas: camarero.idiomas || [],
       otrosIdiomas: camarero.otrosIdiomas || '',
-      certificaciones: Array.isArray(camarero.certificaciones) ? camarero.certificaciones : [],
+      certificaciones: camarero.certificaciones || [],
       otrasCertificaciones: camarero.otrasCertificaciones || '',
-      disponibilidad: Array.isArray(camarero.disponibilidad) ? camarero.disponibilidad : [],
+      disponibilidad: camarero.disponibilidad || [],
       estado: camarero.estado || 'activo'
     });
     setEditingCamarero(camarero);
@@ -343,7 +317,7 @@ export function Camareros({ camareros, setCamareros, pedidos = [], coordinadores
     try {
       const response = await fetch(`${baseUrl}/camareros/${id}`, {
         method: 'DELETE',
-        headers: getReadHeaders()
+        headers: { Authorization: `Bearer ${publicAnonKey}` }
       });
       if (response.ok) {
         await cargarDatos();
@@ -357,7 +331,7 @@ export function Camareros({ camareros, setCamareros, pedidos = [], coordinadores
     try {
       const response = await fetch(`${baseUrl}/camareros/${camarero.id}`, {
         method: 'PUT',
-        headers: getWriteHeaders(),
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${publicAnonKey}` },
         body: JSON.stringify({ ...camarero, estado: nuevoEstado })
       });
       if (response.ok) await cargarDatos();
@@ -374,6 +348,7 @@ export function Camareros({ camareros, setCamareros, pedidos = [], coordinadores
   // --- Funciones de Exportación e Importación Excel ---
   const exportarAExcel = () => {
     try {
+      // Preparar datos para exportar
       const datosExportacion = camareros.map(cam => ({
         'Código': cam.codigo || '',
         'Tipo Perfil': cam.tipoPerfil || 'CAM',
@@ -392,10 +367,12 @@ export function Camareros({ camareros, setCamareros, pedidos = [], coordinadores
         'Estado': cam.estado || 'activo'
       }));
 
+      // Crear libro de Excel
       const ws = XLSX.utils.json_to_sheet(datosExportacion);
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, 'Personal');
 
+      // Generar archivo y descargarlo
       const fecha = new Date().toISOString().split('T')[0];
       XLSX.writeFile(wb, `Personal_${fecha}.xlsx`);
 
@@ -421,6 +398,7 @@ export function Camareros({ camareros, setCamareros, pedidos = [], coordinadores
         return;
       }
 
+      // Confirmar importación
       if (!window.confirm(`¿Deseas importar ${jsonData.length} registros?\n\nEsto creará nuevos perfiles. Los códigos duplicados serán ignorados.`)) {
         return;
       }
@@ -430,12 +408,14 @@ export function Camareros({ camareros, setCamareros, pedidos = [], coordinadores
 
       for (const row of jsonData) {
         try {
+          // Validar campos requeridos
           if (!row['Nombre'] || !row['Apellido']) {
             console.warn('Fila sin nombre/apellido, omitida:', row);
             errores++;
             continue;
           }
 
+          // Verificar si el código ya existe
           const codigoExistente = camareros.find(c => c.codigo === row['Código']);
           if (codigoExistente) {
             console.warn('Código duplicado, omitido:', row['Código']);
@@ -443,6 +423,7 @@ export function Camareros({ camareros, setCamareros, pedidos = [], coordinadores
             continue;
           }
 
+          // Construir objeto camarero
           const nuevoCamarero = {
             codigo: row['Código'] || '',
             tipoPerfil: row['Tipo Perfil'] || 'CAM',
@@ -462,9 +443,13 @@ export function Camareros({ camareros, setCamareros, pedidos = [], coordinadores
             disponibilidad: []
           };
 
+          // Crear en el servidor
           const response = await fetch(`${baseUrl}/camareros`, {
             method: 'POST',
-            headers: getWriteHeaders(),
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${publicAnonKey}`
+            },
             body: JSON.stringify(nuevoCamarero)
           });
 
@@ -479,8 +464,13 @@ export function Camareros({ camareros, setCamareros, pedidos = [], coordinadores
         }
       }
 
+      // Recargar datos
       await cargarDatos();
+
+      // Mostrar resultado
       alert(`✅ Importación completada\n\n• Importados: ${importados}\n• Errores/Omitidos: ${errores}`);
+
+      // Limpiar input file
       event.target.value = '';
     } catch (error) {
       console.error('Error al procesar archivo:', error);
@@ -524,9 +514,10 @@ export function Camareros({ camareros, setCamareros, pedidos = [], coordinadores
         </div>
       </div>
 
-      {/* Métricas */}
+      {/* Métricas (Solo visibles en modo Activos) */}
       {!verApercibidos ? (
         <>
+          {/* Botones de Exportación e Importación */}
           <div className="flex justify-end gap-3">
             <button
               onClick={exportarAExcel}
@@ -591,7 +582,7 @@ export function Camareros({ camareros, setCamareros, pedidos = [], coordinadores
            <AlertTriangle className="w-8 h-8 text-amber-600" />
            <div>
              <h3 className="text-amber-800 font-bold text-lg">Ranking de Apercibidos</h3>
-             <p className="text-amber-700 text-sm">Estos empleados no aparecerán en las listas de asignación hasta que sean reactivados.</p>
+             <p className="text-amber-700 text-sm">Estos camareros no aparecerán en las listas de asignación hasta que sean reactivados.</p>
            </div>
         </div>
       )}
@@ -628,6 +619,7 @@ export function Camareros({ camareros, setCamareros, pedidos = [], coordinadores
           </div>
           
           <form onSubmit={handleSubmit} className="p-6">
+            {/* TAB GENERAL */}
             {activeFormTab === 'general' && (
               <div className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -663,7 +655,7 @@ export function Camareros({ camareros, setCamareros, pedidos = [], coordinadores
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
                       <option key="coord-empty" value="">Seleccionar...</option>
-                      {(Array.isArray(coordinadores) ? coordinadores : []).map(coord => (
+                      {coordinadores.map(coord => (
                         <option key={coord.id} value={coord.id}>{coord.nombre}</option>
                       ))}
                     </select>
@@ -709,6 +701,7 @@ export function Camareros({ camareros, setCamareros, pedidos = [], coordinadores
                 </div>
               </div>
             )}
+            {/* TAB HABILIDADES */}
             {activeFormTab === 'habilidades' && (
               <div className="space-y-8">
                 <div>
@@ -768,7 +761,7 @@ export function Camareros({ camareros, setCamareros, pedidos = [], coordinadores
             <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <Users className="w-8 h-8 text-gray-400" />
             </div>
-            <p className="text-gray-500 text-lg">No hay empleados en esta lista</p>
+            <p className="text-gray-500 text-lg">No hay camareros en esta lista</p>
           </div>
         ) : (
           <div className="divide-y divide-gray-100">
@@ -785,7 +778,7 @@ export function Camareros({ camareros, setCamareros, pedidos = [], coordinadores
                       <h4 className="text-lg font-bold text-gray-900">{camarero.nombre} {camarero.apellido}</h4>
                       {camarero.coordinadorId && (
                          <span className="bg-purple-50 text-purple-700 px-2 py-0.5 rounded-full text-xs border border-purple-100">
-                           Coord: {(Array.isArray(coordinadores) ? coordinadores : []).find(c => c.id === camarero.coordinadorId)?.nombre || 'Desconocido'}
+                           Coord: {coordinadores.find(c => c.id === camarero.coordinadorId)?.nombre || 'Desconocido'}
                          </span>
                       )}
                     </div>
@@ -836,7 +829,7 @@ export function Camareros({ camareros, setCamareros, pedidos = [], coordinadores
                   </div>
                 </div>
 
-                {/* Calendario inline */}
+                {/* Calendario inline con opciones avanzadas */}
                 {showCalendario && selectedCamarero?.id === camarero.id && (
                   <div className="mt-6 pt-6 border-t border-gray-200 animate-in fade-in bg-white rounded-lg">
                     <div className="flex flex-col xl:flex-row gap-6">
@@ -848,6 +841,7 @@ export function Camareros({ camareros, setCamareros, pedidos = [], coordinadores
                            Gestionar Disponibilidad
                         </h5>
                         
+                        {/* Selector de Modo */}
                         <div className="flex bg-white rounded-lg p-1 mb-4 shadow-sm">
                           <button onClick={() => setModoDisponibilidad('unica')} className={`flex-1 py-1.5 text-xs font-medium rounded ${modoDisponibilidad === 'unica' ? 'bg-blue-100 text-blue-700' : 'text-gray-500'}`}>Única</button>
                           <button onClick={() => setModoDisponibilidad('rango')} className={`flex-1 py-1.5 text-xs font-medium rounded ${modoDisponibilidad === 'rango' ? 'bg-blue-100 text-blue-700' : 'text-gray-500'}`}>Rango</button>
@@ -855,6 +849,7 @@ export function Camareros({ camareros, setCamareros, pedidos = [], coordinadores
                         </div>
 
                         <div className="space-y-3">
+                           {/* Fechas */}
                            <div className="grid grid-cols-2 gap-2">
                               <div>
                                 <label className="block text-xs font-bold text-gray-600 mb-1">{modoDisponibilidad === 'unica' ? 'Fecha' : 'Desde'}</label>
@@ -868,6 +863,7 @@ export function Camareros({ camareros, setCamareros, pedidos = [], coordinadores
                               )}
                            </div>
 
+                           {/* Días Semanales */}
                            {modoDisponibilidad === 'semanal' && (
                              <div>
                                <label className="block text-xs font-bold text-gray-600 mb-1">Repetir los días</label>
@@ -885,6 +881,7 @@ export function Camareros({ camareros, setCamareros, pedidos = [], coordinadores
                              </div>
                            )}
 
+                           {/* Horario */}
                            <div className="grid grid-cols-2 gap-2">
                               <div>
                                 <label className="block text-xs font-bold text-gray-600 mb-1">Hora Inicio</label>
@@ -896,6 +893,7 @@ export function Camareros({ camareros, setCamareros, pedidos = [], coordinadores
                               </div>
                            </div>
                            
+                           {/* Tipo */}
                            <div>
                              <label className="block text-xs font-bold text-gray-600 mb-1">Estado</label>
                              <select value={tipoDisponibilidad} onChange={(e) => setTipoDisponibilidad(e.target.value)} className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm">
@@ -917,47 +915,54 @@ export function Camareros({ camareros, setCamareros, pedidos = [], coordinadores
                           <span className="text-xs font-normal text-gray-500 bg-gray-100 px-2 py-1 rounded">Ordenado por fecha</span>
                         </h5>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 max-h-[300px] overflow-y-auto pr-1">
-                          {Array.isArray(camarero.disponibilidad) && camarero.disponibilidad.length > 0 ? (
-                            camarero.disponibilidad
-                              .sort((a, b) => new Date(a.fecha) - new Date(b.fecha))
-                              .map((disp, idx) => (
-                                <div
-                                  key={`${disp.fecha}-${idx}`}
-                                  className={`flex flex-col p-2 rounded border relative group ${
-                                    disp.tipo === 'disponible'
-                                      ? 'bg-green-50 border-green-200'
-                                      : 'bg-red-50 border-red-200'
-                                  }`}
-                                >
-                                  <div className="flex justify-between items-start">
-                                    <span className={`text-xs font-bold ${disp.tipo==='disponible' ? 'text-green-800' : 'text-red-800'}`}>
-                                      {new Date(disp.fecha).toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short' })}
-                                    </span>
-                                    <button
-                                      onClick={() => eliminarDisponibilidad(disp.fecha)}
-                                      className="text-gray-400 hover:text-red-600"
-                                    >
-                                      <XCircle className="w-4 h-4" />
-                                    </button>
+                          {(() => {
+                            // Asegurar que disponibilidad sea un array
+                            const disponibilidadArray = Array.isArray(camarero.disponibilidad) 
+                              ? camarero.disponibilidad 
+                              : [];
+                            
+                            return disponibilidadArray.length > 0 ? (
+                              disponibilidadArray
+                                .sort((a, b) => new Date(a.fecha) - new Date(b.fecha))
+                                .map((disp, idx) => (
+                                  <div
+                                    key={`${disp.fecha}-${idx}`}
+                                    className={`flex flex-col p-2 rounded border relative group ${
+                                      disp.tipo === 'disponible'
+                                        ? 'bg-green-50 border-green-200'
+                                        : 'bg-red-50 border-red-200'
+                                    }`}
+                                  >
+                                    <div className="flex justify-between items-start">
+                                      <span className={`text-xs font-bold ${disp.tipo==='disponible' ? 'text-green-800' : 'text-red-800'}`}>
+                                        {new Date(disp.fecha).toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short' })}
+                                      </span>
+                                      <button
+                                        onClick={() => eliminarDisponibilidad(disp.fecha)}
+                                        className="text-gray-400 hover:text-red-600"
+                                      >
+                                        <XCircle className="w-4 h-4" />
+                                      </button>
+                                    </div>
+                                    <div className="text-xs text-gray-600 mt-1 flex items-center gap-1">
+                                       {disp.horario ? (
+                                         <>
+                                           <Clock className="w-3 h-3" />
+                                           <span>{disp.horario}</span>
+                                         </>
+                                       ) : (
+                                         <span className="italic opacity-50">Todo el día</span>
+                                       )}
+                                    </div>
                                   </div>
-                                  <div className="text-xs text-gray-600 mt-1 flex items-center gap-1">
-                                     {disp.horario ? (
-                                       <>
-                                         <Clock className="w-3 h-3" />
-                                         <span>{disp.horario}</span>
-                                       </>
-                                     ) : (
-                                       <span className="italic opacity-50">Todo el día</span>
-                                     )}
-                                  </div>
-                                </div>
-                              ))
-                          ) : (
-                            <div className="col-span-full py-8 text-center text-gray-400 border-2 border-dashed border-gray-100 rounded-lg">
-                              <Calendar className="w-8 h-8 mx-auto mb-2 opacity-20" />
-                              <p className="text-sm">No hay disponibilidad registrada</p>
-                            </div>
-                          )}
+                                ))
+                            ) : (
+                              <div className="col-span-full py-8 text-center text-gray-400 border-2 border-dashed border-gray-100 rounded-lg">
+                                <Calendar className="w-8 h-8 mx-auto mb-2 opacity-20" />
+                                <p className="text-sm">No hay disponibilidad registrada</p>
+                              </div>
+                            );
+                          })()}
                         </div>
                       </div>
                     </div>

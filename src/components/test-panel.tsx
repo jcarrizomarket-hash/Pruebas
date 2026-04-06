@@ -63,37 +63,41 @@ export function TestPanel() {
     }, ...prev.slice(0, 9)]); // Mantener últimos 10 resultados
   };
 
-  const checkWhatsAppConfig = async () => {
-    setLoading(true);
+  const verificarConfigWhatsApp = async () => {
+    setResultado('Verificando configuración de WhatsApp...');
     try {
       const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-25b11ac0/verificar-whatsapp-config`,
+        `https://${projectId}.supabase.co/functions/v1/make-server-ce05fe95/verificar-whatsapp-config`,
         {
           headers: {
-            'Authorization': `Bearer ${publicAnonKey}`
+            'Authorization': `Bearer ${publicAnonKey}`,
+            'Content-Type': 'application/json'
           }
         }
       );
-      const data = await response.json();
-      setWhatsappStatus(data);
       
-      if (data.configured) {
-        addResult('WhatsApp Config', 'success', `Configurado correctamente desde ${data.source}`, data);
+      const data = await response.json();
+      
+      if (data.success) {
+        setResultado(`✅ WhatsApp configurado correctamente\nAPI Key: ${data.data.apiKeyPresente ? '✓' : '✗'}\nPhone ID: ${data.data.phoneIdPresente ? '✓' : '✗'}`);
       } else {
-        addResult('WhatsApp Config', 'warning', 'WhatsApp no configurado', data);
+        setResultado(`❌ Error: ${data.error}`);
       }
     } catch (error) {
-      addResult('WhatsApp Config', 'error', 'Error al verificar configuración', error);
-    } finally {
-      setLoading(false);
+      setResultado(`❌ Error de conexión: ${error.message}`);
     }
   };
 
-  const sendTestWhatsApp = async () => {
-    setLoading(true);
+  const enviarMensajePrueba = async () => {
+    if (!telefono.trim()) {
+      setResultado('❌ Por favor ingresa un número de teléfono');
+      return;
+    }
+    
+    setResultado('Enviando mensaje de prueba...');
     try {
       const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-25b11ac0/enviar-whatsapp`,
+        `https://${projectId}.supabase.co/functions/v1/make-server-ce05fe95/enviar-whatsapp`,
         {
           method: 'POST',
           headers: {

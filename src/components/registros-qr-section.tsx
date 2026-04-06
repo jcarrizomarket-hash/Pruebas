@@ -1,7 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Download, Filter, X, Clock, CheckCircle2, XCircle, Edit2, Save, Calendar } from 'lucide-react';
 import * as XLSX from 'xlsx';
-import { getReadHeaders, getWriteHeaders } from '../utils/api-headers';
 
 interface RegistrosQRSectionProps {
   baseUrl: string;
@@ -31,7 +30,9 @@ export function RegistrosQRSection({ baseUrl, publicAnonKey }: RegistrosQRSectio
     setCargando(true);
     try {
       const response = await fetch(`${baseUrl}/registros-qr`, {
-        headers: getReadHeaders()
+        headers: {
+          Authorization: `Bearer ${publicAnonKey}`
+        }
       });
       
       const result = await response.json();
@@ -226,7 +227,10 @@ export function RegistrosQRSection({ baseUrl, publicAnonKey }: RegistrosQRSectio
         `${baseUrl}/registros-qr/${registro.pedidoId}/${registro.camareroId}/salida`,
         {
           method: 'PUT',
-          headers: getWriteHeaders(),
+          headers: {
+            Authorization: `Bearer ${publicAnonKey}`,
+            'Content-Type': 'application/json'
+          },
           body: JSON.stringify({ horaSalida: horaSalidaEdit })
         }
       );

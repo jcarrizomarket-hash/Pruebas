@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Send, CheckCircle, XCircle, AlertCircle, Loader, MessageCircle, Users, Phone } from 'lucide-react';
-import { getReadHeaders, getWriteHeaders } from '../utils/api-headers';
 
 interface WhatsAppTestProps {
   baseUrl: string;
@@ -37,7 +36,9 @@ export function WhatsAppTest({ baseUrl, publicAnonKey, camareros, coordinadores,
     
     try {
       const response = await fetch(`${baseUrl}/verificar-whatsapp-config`, {
-        headers: getReadHeaders()
+        headers: {
+          Authorization: `Bearer ${publicAnonKey}`
+        }
       });
       
       const result = await response.json();
@@ -90,7 +91,10 @@ export function WhatsAppTest({ baseUrl, publicAnonKey, camareros, coordinadores,
     try {
       const response = await fetch(`${baseUrl}/enviar-whatsapp`, {
         method: 'POST',
-        headers: getWriteHeaders(),
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${publicAnonKey}`
+        },
         body: JSON.stringify({
           telefono: telefonoTest,
           mensaje: mensajeTest
@@ -141,7 +145,9 @@ export function WhatsAppTest({ baseUrl, publicAnonKey, camareros, coordinadores,
     try {
       // Intentar acceder a un token inexistente (debería devolver error amigable)
       const response = await fetch(`${baseUrl}/confirmar/test-token-12345`, {
-        headers: getReadHeaders()
+        headers: {
+          Authorization: `Bearer ${publicAnonKey}`
+        }
       });
       
       // Verificar que el endpoint responde (aunque sea con error)
@@ -181,7 +187,10 @@ export function WhatsAppTest({ baseUrl, publicAnonKey, camareros, coordinadores,
       const testToken = `test-token-${Date.now()}`;
       const response = await fetch(`${baseUrl}/guardar-token`, {
         method: 'POST',
-        headers: getWriteHeaders(),
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${publicAnonKey}`
+        },
         body: JSON.stringify({
           token: testToken,
           pedidoId: 'test-pedido',
@@ -233,7 +242,9 @@ export function WhatsAppTest({ baseUrl, publicAnonKey, camareros, coordinadores,
     
     try {
       const response = await fetch(`${baseUrl}/chats/${coordinadorId}`, {
-        headers: getReadHeaders()
+        headers: {
+          Authorization: `Bearer ${publicAnonKey}`
+        }
       });
       
       const result = await response.json();

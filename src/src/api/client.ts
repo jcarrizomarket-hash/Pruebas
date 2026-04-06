@@ -37,7 +37,7 @@ const getBaseUrl = (): string => {
     console.warn('VITE_SUPABASE_PROJECT_ID no está configurado');
     return '';
   }
-  return `https://${projectId}.supabase.co/functions/v1/make-server-25b11ac0`;
+  return `https://${projectId}.supabase.co/functions/v1/make-server-ce05fe95`;
 };
 
 // Headers comunes para todas las peticiones

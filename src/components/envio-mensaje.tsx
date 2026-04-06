@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Send, MessageCircle, Search, Phone, MoreVertical, Check, X as XIcon, Clock } from 'lucide-react';
 import { projectId } from '../utils/supabase/info';
-import { getReadHeaders, getWriteHeaders } from '../utils/api-headers';
 
 // v2.0.0 - Interfaz tipo WhatsApp Web completa
 interface EnvioMensajeProps {
@@ -80,7 +79,10 @@ export function EnvioMensaje({ pedidos, camareros, coordinadores, baseUrl, publi
     try {
       await fetch(`${baseUrl}/guardar-token`, {
         method: 'POST',
-        headers: getWriteHeaders(),
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${publicAnonKey}`
+        },
         body: JSON.stringify({
           token: token,
           pedidoId: pedido.id,
@@ -92,7 +94,7 @@ export function EnvioMensaje({ pedidos, camareros, coordinadores, baseUrl, publi
       console.log('Error al guardar token:', error);
     }
     
-    const baseUrlConfirmacion = `https://${projectId}.supabase.co/functions/v1/make-server-25b11ac0`;
+    const baseUrlConfirmacion = `https://${projectId}.supabase.co/functions/v1/make-server-ce05fe95`;
     const confirmarUrl = `${baseUrlConfirmacion}/confirmar/${token}`;
     const noConfirmarUrl = `${baseUrlConfirmacion}/no-confirmar/${token}`;
     
@@ -163,7 +165,10 @@ export function EnvioMensaje({ pedidos, camareros, coordinadores, baseUrl, publi
     try {
       await fetch(`${baseUrl}/pedidos/${eventoSeleccionado.id}`, {
         method: 'PUT',
-        headers: getWriteHeaders(),
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${publicAnonKey}`
+        },
         body: JSON.stringify({
           ...eventoSeleccionado,
           asignaciones
@@ -189,7 +194,10 @@ export function EnvioMensaje({ pedidos, camareros, coordinadores, baseUrl, publi
     try {
       await fetch(`${baseUrl}/pedidos/${eventoSeleccionado.id}`, {
         method: 'PUT',
-        headers: getWriteHeaders(),
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${publicAnonKey}`
+        },
         body: JSON.stringify({
           ...eventoSeleccionado,
           asignaciones
@@ -225,7 +233,10 @@ export function EnvioMensaje({ pedidos, camareros, coordinadores, baseUrl, publi
     try {
       await fetch(`${baseUrl}/pedidos/${eventoSeleccionado.id}`, {
         method: 'PUT',
-        headers: getWriteHeaders(),
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${publicAnonKey}`
+        },
         body: JSON.stringify({
           ...eventoSeleccionado,
           asignaciones

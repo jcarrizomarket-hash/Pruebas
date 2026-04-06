@@ -14,12 +14,11 @@ import { InitTestPanel } from './components/init-test-panel';
 import { TestEdgeFunction } from './components/TestEdgeFunction';
 import { projectId, publicAnonKey } from './utils/supabase/info';
 import { Toaster } from './components/ui/sonner';
+import { transformCamareros, transformPedidos } from './utils/transform-data';
 
-// Aplicación de Gestión de Perfiles para Eventos v2.6.2
-// Última actualización: Eliminado /public/_headers/main.tsx conflictivo
-console.log('🚀 App iniciando - Build v2.6.2');
-console.log('📍 Location:', window.location.href);
-console.log('🔧 Environment:', import.meta.env.MODE);
+// Aplicación de Gestión de Perfiles para Eventos v3.2.0-FIX-PGRST204
+// CRITICAL FIX: Campo mapping en actualizarPedido (camisa, catering, notas → observaciones)
+console.log('🚀🚀🚀 APP STARTING - BUILD v3.2.0-FIX-PGRST204 🚀🚀🚀');
 
 interface User {
   email: string;
@@ -44,16 +43,6 @@ export default function App() {
   const isQRScanPath = currentPath.includes('/qr-scan/');
   const qrToken = isQRScanPath ? currentPath.split('/qr-scan/')[1] : null;
 
-  // Si es una URL de escaneo QR, mostrar la página pública sin autenticación
-  if (isQRScanPath && qrToken) {
-    return (
-      <>
-        <QRScanPage token={qrToken} baseUrl={baseUrl} publicAnonKey={publicAnonKey} />
-        <Toaster position="top-right" />
-      </>
-    );
-  }
-
   const cargarDatos = async () => {
     try {
       const [camarerosRes, pedidosRes, coordinadoresRes, clientesRes] = await Promise.all([
@@ -76,8 +65,14 @@ export default function App() {
       const coordinadoresData = await coordinadoresRes.json();
       const clientesData = await clientesRes.json();
 
-      if (camarerosData.success) setCamareros(camarerosData.data);
-      if (pedidosData.success) setPedidos(pedidosData.data);
+      // Transformar datos usando utilidades
+      if (camarerosData.success) {
+        setCamareros(transformCamareros(camarerosData.data));
+      }
+      
+      if (pedidosData.success) {
+        setPedidos(transformPedidos(pedidosData.data));
+      }
       if (coordinadoresData.success) setCoordinadores(coordinadoresData.data);
       if (clientesData.success) setClientes(clientesData.data);
     } catch (error) {
@@ -86,16 +81,10 @@ export default function App() {
   };
 
   useEffect(() => {
+    // Verificar si ya está autenticado
     const auth = localStorage.getItem('authenticated');
     const userStr = localStorage.getItem('user');
-    const expiresAt = localStorage.getItem('session_expires_at');
     if (auth === 'true' && userStr) {
-      if (expiresAt && Date.now() > parseInt(expiresAt)) {
-        localStorage.removeItem('authenticated');
-        localStorage.removeItem('user');
-        localStorage.removeItem('session_expires_at');
-        return;
-      }
       setIsAuthenticated(true);
       setCurrentUser(JSON.parse(userStr));
     }
@@ -115,10 +104,19 @@ export default function App() {
   const handleLogout = () => {
     localStorage.removeItem('authenticated');
     localStorage.removeItem('user');
-    localStorage.removeItem('session_expires_at');
     setIsAuthenticated(false);
     setCurrentUser(null);
   };
+
+  // Si es una URL de escaneo QR, mostrar la página pública sin autenticación
+  if (isQRScanPath && qrToken) {
+    return (
+      <>
+        <QRScanPage token={qrToken} baseUrl={baseUrl} publicAnonKey={publicAnonKey} />
+        <Toaster position="top-right" />
+      </>
+    );
+  }
 
   // Si no está autenticado, mostrar login
   if (!isAuthenticated) {

@@ -2,7 +2,6 @@ import { useState, useMemo, useEffect } from 'react';
 import { FileText, Download, TrendingUp, Users, Clock, Calendar, AlertCircle, Award, Frown, CheckCircle, FileSpreadsheet } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { getReadHeaders, getWriteHeaders } from '../utils/api-headers';
 
 export function Informes({ camareros, pedidos, baseUrl, publicAnonKey }) {
   const [tipoInforme, setTipoInforme] = useState('cliente');
@@ -20,7 +19,7 @@ export function Informes({ camareros, pedidos, baseUrl, publicAnonKey }) {
   const cargarClientes = async () => {
     try {
       const response = await fetch(`${baseUrl}/clientes`, {
-        headers: getReadHeaders()
+        headers: { Authorization: `Bearer ${publicAnonKey}` }
       });
       const data = await response.json();
       if (data.success) setClientes(data.data);
