@@ -3,6 +3,7 @@ import { Calendar, ChevronLeft, ChevronRight, Users, X, AlertCircle, Clock, Down
 import { QRControl } from './qr-control';
 import { RegistrosQRSection } from './registros-qr-section';
 import { getReadHeaders, getWriteHeaders } from '../utils/api-headers';
+import { ROLES as ROLES, employeeLabel as genericLabel } from '../config/env';
 
 // v1.0.3 - Verificación completa de React keys
 interface GestionPedidosProps {
@@ -949,7 +950,7 @@ export function GestionPedidos({ pedidos, setPedidos, camareros, baseUrl, public
                 {filasTabla.length === 0 ? (
                    <tr>
                      <td colSpan={8} className="px-6 py-8 text-center text-gray-500">
-                       No hay eventos o camareros asignados en el periodo seleccionado.
+                       No hay eventos o {genericLabel} asignados en el periodo seleccionado.
                      </td>
                    </tr>
                 ) : (
@@ -1083,7 +1084,7 @@ export function GestionPedidos({ pedidos, setPedidos, camareros, baseUrl, public
             isCompleto ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
           }`}>
             {isCompleto ? <Check className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
-            {isCompleto ? 'Equipo Completo' : `Faltan ${faltantes} camareros`}
+            {isCompleto ? 'Equipo Completo' : `Faltan ${faltantes} {genericLabel}`}
           </span>
         </div>
       </div>
@@ -1112,7 +1113,7 @@ export function GestionPedidos({ pedidos, setPedidos, camareros, baseUrl, public
               </div>
               <div>
                 <p className="text-gray-500 mb-1">Requeridos</p>
-                <p className="font-medium text-gray-800">{requeridos} camareros</p>
+                <p className="font-medium text-gray-800">{requeridos} {genericLabel}</p>
               </div>
             </div>
           </div>
@@ -1133,7 +1134,7 @@ export function GestionPedidos({ pedidos, setPedidos, camareros, baseUrl, public
           <div className="p-4 border-b border-gray-200 bg-gray-50 flex flex-col gap-3">
             <h2 className="font-semibold text-gray-800 flex items-center gap-2">
               <UserCheck className="w-5 h-5 text-purple-600" />
-              Camareros Disponibles
+              {genericLabel} Disponibles
             </h2>
             <div className="relative">
               <Search className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
@@ -1149,7 +1150,7 @@ export function GestionPedidos({ pedidos, setPedidos, camareros, baseUrl, public
           <div className="p-4 overflow-y-auto flex-1 bg-gray-50/30">
             {camarerosDisponibles.length === 0 ? (
               <div className="text-center py-12">
-                <p className="text-gray-400 mb-2">No se encontraron camareros</p>
+                <p className="text-gray-400 mb-2">No se encontraron {genericLabel}</p>
                 <p className="text-xs text-gray-300">Intenta cambiar la búsqueda o verifica la disponibilidad</p>
               </div>
             ) : (
@@ -1194,7 +1195,7 @@ export function GestionPedidos({ pedidos, setPedidos, camareros, baseUrl, public
             {(!selectedPedido.asignaciones || selectedPedido.asignaciones.length === 0) ? (
               <div className="h-full flex flex-col items-center justify-center text-gray-400 border-2 border-dashed border-gray-200 rounded-lg">
                 <Users className="w-12 h-12 mb-3 opacity-20" />
-                <p>Aún no has asignado camareros</p>
+                <p>Aún no has asignado {genericLabel}</p>
                 <p className="text-sm">Selecciona de la lista izquierda</p>
               </div>
             ) : (
@@ -1352,7 +1353,7 @@ export function GestionPedidos({ pedidos, setPedidos, camareros, baseUrl, public
                         {selectedPedido.horaEntrada} - {selectedPedido.horaSalida}
                       </p>
                       <p className="text-xs text-gray-500 mt-1">
-                        {parseInt(selectedPedido.cantidadCamareros || 0)} camareros necesarios
+                        {parseInt(selectedPedido.cantidadCamareros || 0)} {genericLabel} necesarios
                       </p>
                     </div>
                     <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
@@ -1382,7 +1383,7 @@ export function GestionPedidos({ pedidos, setPedidos, camareros, baseUrl, public
                         {selectedPedido.horaEntrada2} - {selectedPedido.horaSalida2}
                       </p>
                       <p className="text-xs text-gray-500 mt-1">
-                        {parseInt(selectedPedido.cantidadCamareros2 || 0)} camareros necesarios
+                        {parseInt(selectedPedido.cantidadCamareros2 || 0)} {genericLabel} necesarios
                       </p>
                     </div>
                     <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
