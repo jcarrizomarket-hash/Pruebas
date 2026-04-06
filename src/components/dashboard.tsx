@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { WhatsAppConfigStatus } from './whatsapp-config-status';
 import { getReadHeaders, getWriteHeaders } from '../utils/api-headers';
+import { employeeLabel as genericLabel, maxEmployees as maxEmployees } from '../config/env';
 
 interface DashboardProps {
   camareros: any[];
@@ -467,7 +468,7 @@ export function Dashboard({ camareros, pedidos, setActiveTab, baseUrl, publicAno
       </div>
 
       {/* Indicadores de Alerta */}
-      {(metrics.mensajesSinEnviar > 0 || metrics.mensajesSinConfirmar > 5 || metrics.camarerosApercibidos > 0) && (
+      {(metrics.mensajesSinEnviar > 0 || metrics.mensajesSinConfirmar > maxEmployees || metrics.camarerosApercibidos > 0) && (
         <div className="bg-yellow-50 border-l-4 border-yellow-400 p-6 rounded-lg shadow-sm">
           <div className="flex items-start gap-3">
             <AlertCircle className="w-6 h-6 text-yellow-600 flex-shrink-0 mt-1" />
