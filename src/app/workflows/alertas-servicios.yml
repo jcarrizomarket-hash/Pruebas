@@ -1,0 +1,46 @@
+name: Verificar Alertas de Servicio
+
+on:
+  schedule:
+    # Ejecutar cada hora en punto (minuto 0)
+    - cron: '0 * * * *'
+  
+  # Permite ejecución manual desde GitHub Actions
+  workflow_dispatch:
+
+jobs:
+  verificar-alertas:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Verificar alertas de servicios próximos
+        run: |
+          echo "🔔 Verificando alertas de servicios..."
+          
+          RESPONSE=$(curl -s -w "\n%{http_code}" \
+            -X GET \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}" \
+            https://nkwqaekswfwfpukqfzpk.supabase.co/functions/v1/make-server-ce05fe95/verificar-alertas-servicios)
+          
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+          BODY=$(echo "$RESPONSE" | head -n-1)
+          
+          echo "📊 Código de respuesta: $HTTP_CODE"
+          echo "📋 Respuesta del servidor:"
+          echo "$BODY" | jq '.' || echo "$BODY"
+          
+          if [ "$HTTP_CODE" -eq 200 ]; then
+            echo "✅ Verificación exitosa"
+          else
+            echo "❌ Error en la verificación"
+            exit 1
+          fi
+
+      - name: Notificar resultado
+        if: always()
+        run: |
+          if [ ${{ job.status }} == 'success' ]; then
+            echo "✅ El cron job se ejecutó correctamente"
+          else
+            echo "❌ El cron job falló"
+          fi

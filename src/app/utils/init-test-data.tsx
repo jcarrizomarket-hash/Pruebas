@@ -7,7 +7,7 @@
  * ACTUALIZADO: Ahora usa las tablas SQL de Supabase en lugar del KV store
  */
 
-import { projectId, publicAnonKey } from '../utils/supabase/info';
+import { projectId, publicAnonKey } from './supabase/info';
 
 const baseUrl = `https://${projectId}.supabase.co/functions/v1/make-server-25b11ac0`;
 

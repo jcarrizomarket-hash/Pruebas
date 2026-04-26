@@ -1,0 +1,1 @@
+{"message":"Legacy API keys are disabled","hint":"Your legacy API keys (anon, service_role) were disabled on 2026-03-18T23:47:03.476264+00:00. Re-enable them in the Supabase dashboard, or use the new publishable and secret API keys."}
