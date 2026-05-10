@@ -1,0 +1,5 @@
+fix: eliminar vercel.json duplicado en src/app
+
+El archivo vercel.json en src/app/ estaba causando que Vercel
+buscara package.json en el directorio incorrecto. Solo debe
+haber un vercel.json en la raíz del proyecto.
