@@ -70,7 +70,7 @@ console.log('🔧 Supabase Config:', {
   mode: typeof import.meta !== 'undefined' ? import.meta.env?.MODE : 'unknown',
   prod: typeof import.meta !== 'undefined' ? import.meta.env?.PROD : 'unknown',
   dev: typeof import.meta !== 'undefined' ? import.meta.env?.DEV : 'unknown',
-  viteAppEnv: typeof import.meta !== 'undefined' ? import.meta.env?.VITE_APP_ENV : 'unknown',
+  viteVercelEnv: typeof import.meta !== 'undefined' ? import.meta.env?.VITE_VERCEL_ENV : 'unknown',  // ← Agregar esta línea
   hostname: typeof window !== 'undefined' ? window.location.hostname : 'unknown'
 });
 
