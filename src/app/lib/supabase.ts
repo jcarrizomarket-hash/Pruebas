@@ -3,7 +3,7 @@
  * Usa la configuración centralizada de ambientes
  */
 
-import { createClient } from '@supabase/supabase-js@2.39.3';
+import { createClient } from "@supabase/supabase-js";
 import { supabaseUrl, publicAnonKey } from '../config/supabase.config';
 
 // Debug: Verificar qué URL y key se está usando

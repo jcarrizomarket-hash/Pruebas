@@ -3,7 +3,7 @@
  * Reemplaza el sistema KV Store con queries SQL directas
  */
 
-import { SupabaseClient } from 'npm:@supabase/supabase-js@2.39.3';
+import { SupabaseClient } from "npm:@supabase/supabase-js";
 import * as kv from './kv_store.tsx';
 
 // ============== GENERACIÓN DE CÓDIGOS CORRELATIVOS ==============

@@ -6,7 +6,7 @@
  * deno run --allow-net --allow-write export-data.ts
  */
 
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
+import { createClient } from "https://esm.sh/@supabase/supabase-js";
 
 // Configuración de Supabase DESARROLLO
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') || '';
