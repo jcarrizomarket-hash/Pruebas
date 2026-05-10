@@ -36,7 +36,10 @@ export default function App() {
   const [clientes, setClientes] = useState([]);
   const [selectedPedido, setSelectedPedido] = useState(null);
 
-  const baseUrl = `https://${projectId}.supabase.co/functions/v1/make-server-ce05fe95`;
+  // URL de Edge Functions (diferente para dev y prod)
+  const baseUrl = projectId === 'bvnbwqsvldsfdgfzifcp'
+    ? `https://${projectId}.supabase.co/functions/v1/make-server-prod`
+    : `https://${projectId}.supabase.co/functions/v1/make-server-ce05fe95`;
 
   // Detectar si la URL es de escaneo QR
   const currentPath = window.location.pathname;

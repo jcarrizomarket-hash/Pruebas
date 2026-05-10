@@ -30,7 +30,7 @@ export function Login({ onLogin, baseUrl, publicAnonKey }: LoginProps) {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          email: 'admin@ejemplo.com',
+          email: 'admin@camareros.app',
           nombre: 'Administrador',
           rol: 'admin',
           password: 'admin123'
@@ -40,8 +40,8 @@ export function Login({ onLogin, baseUrl, publicAnonKey }: LoginProps) {
       const result = await response.json();
 
       if (result.success) {
-        setSetupMessage('✅ Usuario admin creado exitosamente. Usa: admin@ejemplo.com / admin123');
-        setEmail('admin@ejemplo.com');
+        setSetupMessage('✅ Usuario admin creado exitosamente. Usa: admin@camareros.app / admin123');
+        setEmail('admin@camareros.app');
         setPassword('admin123');
       } else {
         setError(result.error || 'Error al crear usuario admin');
@@ -56,7 +56,7 @@ export function Login({ onLogin, baseUrl, publicAnonKey }: LoginProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!email || !password) {
       setError('Ingresa email y contraseña');
       return;
@@ -66,29 +66,47 @@ export function Login({ onLogin, baseUrl, publicAnonKey }: LoginProps) {
       setLoading(true);
       setError('');
 
-      const response = await fetch(`${baseUrl}/login`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${publicAnonKey}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ email, password })
-      });
+      // Intentar primero con Edge Function
+      try {
+        const response = await fetch(`${baseUrl}/login`, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${publicAnonKey}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ email, password })
+        });
 
-      const result = await response.json();
+        if (response.ok) {
+          const result = await response.json();
+          if (result.success && result.user) {
+            localStorage.setItem('authenticated', 'true');
+            localStorage.setItem('user', JSON.stringify(result.user));
+            onLogin(result.user);
+            return;
+          }
+        }
+      } catch (edgeFunctionError) {
+        console.log('Edge Function no disponible, usando acceso directo');
+      }
 
-      if (result.success && result.user) {
-        // Guardar sesión
-        localStorage.setItem('authenticated', 'true');
-        localStorage.setItem('user', JSON.stringify(result.user));
-        onLogin(result.user);
-      } else {
+      // Fallback: Acceso directo a Supabase usando singleton
+      const { loginWithCredentials } = await import('../lib/supabase');
+      const result = await loginWithCredentials(email, password);
+
+      if (!result.success) {
         setError(result.error || 'Credenciales incorrectas');
         setPassword('');
+        return;
       }
+
+      localStorage.setItem('authenticated', 'true');
+      localStorage.setItem('user', JSON.stringify(result.user));
+      onLogin(result.user);
+
     } catch (error) {
       console.error('Error al iniciar sesión:', error);
-      setError('Error al conectar con el servidor');
+      setError('Error al conectar con la base de datos');
     } finally {
       setLoading(false);
     }

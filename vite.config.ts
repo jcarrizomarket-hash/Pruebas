@@ -29,4 +29,7 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  // Configuración para variables de entorno
+  envDir: './',
+  envPrefix: 'VITE_',
 })

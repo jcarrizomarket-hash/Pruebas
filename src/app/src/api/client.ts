@@ -13,20 +13,14 @@ import type {
   EmailConfig 
 } from '../types';
 
-// Configuración de la API - lee de variables de entorno
-const getApiConfig = () => {
-  // Intentar obtener de import.meta.env (Vite) o de window global
-  const projectId = 
-    (typeof import.meta !== 'undefined' && import.meta.env?.VITE_SUPABASE_PROJECT_ID) ||
-    (typeof window !== 'undefined' && (window as any).VITE_SUPABASE_PROJECT_ID);
-    
-  const publicAnonKey = 
-    (typeof import.meta !== 'undefined' && import.meta.env?.VITE_SUPABASE_ANON_KEY) ||
-    (typeof window !== 'undefined' && (window as any).VITE_SUPABASE_ANON_KEY);
+// Importar configuración centralizada
+import { projectId as configProjectId, publicAnonKey as configPublicAnonKey } from '../../config/supabase.config';
 
+// Configuración de la API
+const getApiConfig = () => {
   return {
-    projectId: projectId || '',
-    publicAnonKey: publicAnonKey || '',
+    projectId: configProjectId,
+    publicAnonKey: configPublicAnonKey,
   };
 };
 
