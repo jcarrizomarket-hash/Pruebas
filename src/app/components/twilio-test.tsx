@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Send, CheckCircle, XCircle, AlertCircle, Loader, Phone, MessageSquare, Webhook } from 'lucide-react';
+import { Send, CheckCircle, XCircle, AlertCircle, Loader, Phone, MessageSquare } from 'lucide-react';
 
 interface TwilioTestProps {
   baseUrl: string;
@@ -112,36 +112,6 @@ export function TwilioTest({ baseUrl, publicAnonKey }: TwilioTestProps) {
     }
   };
 
-  // Test 3: Verificar disponibilidad del webhook
-  const testWebhook = async () => {
-    addResult('Webhook WhatsApp', 'info', 'Verificando disponibilidad del webhook de Twilio...');
-    try {
-      const response = await fetch(`${baseUrl}/whatsapp-webhook`, {
-        headers: { Authorization: `Bearer ${publicAnonKey}` }
-      });
-      // El webhook GET espera un token de verificación — si responde (aunque sea con error de token)
-      // el endpoint está activo
-      const result = await response.json();
-
-      if (response.status === 200) {
-        addResult('Webhook WhatsApp', 'success', '✅ Webhook activo y respondiendo', result);
-      } else if (response.status === 400 || result.error) {
-        addResult(
-          'Webhook WhatsApp',
-          'warning',
-          '⚠️ Webhook activo pero requiere token de verificación de Twilio',
-          { status: response.status, response: result }
-        );
-      } else {
-        addResult('Webhook WhatsApp', 'error', `❌ Webhook no disponible (HTTP ${response.status})`, result);
-      }
-      return true;
-    } catch (error) {
-      addResult('Webhook WhatsApp', 'error', '❌ No se pudo contactar el webhook', { error: String(error) });
-      return false;
-    }
-  };
-
   // Ejecutar todos los tests
   const runAllTests = async () => {
     setTesting(true);
@@ -149,9 +119,6 @@ export function TwilioTest({ baseUrl, publicAnonKey }: TwilioTestProps) {
     addResult('Inicio', 'info', '🚀 Iniciando batería de tests de Twilio WhatsApp...');
 
     await testVerificarConfig();
-    await new Promise(r => setTimeout(r, 500));
-
-    await testWebhook();
     await new Promise(r => setTimeout(r, 500));
 
     if (telefonoTest) {
@@ -270,13 +237,6 @@ export function TwilioTest({ baseUrl, publicAnonKey }: TwilioTestProps) {
             <CheckCircle className="w-4 h-4" /> Verificar Config
           </button>
           <button
-            onClick={testWebhook}
-            disabled={testing}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 text-sm flex items-center justify-center gap-2"
-          >
-            <Webhook className="w-4 h-4" /> Test Webhook
-          </button>
-          <button
             onClick={testEnviarMensaje}
             disabled={testing || !telefonoTest}
             className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-gray-300 text-sm flex items-center justify-center gap-2"
@@ -328,8 +288,7 @@ export function TwilioTest({ baseUrl, publicAnonKey }: TwilioTestProps) {
         <h4 className="font-semibold text-blue-900 mb-3">📋 Guía de Tests</h4>
         <div className="space-y-2 text-sm text-blue-800">
           <p><strong>Verificar Config:</strong> Llama a <code>/verificar-twilio-config</code> — comprueba Account SID, Auth Token y número origen de Twilio</p>
-          <p><strong>Test Webhook:</strong> Llama a <code>/whatsapp-webhook</code> — verifica que el endpoint receptor de mensajes esté activo</p>
-          <p><strong>Enviar Mensaje:</strong> Llama a <code>/enviar-twilio-test</code> — envía un WhatsApp real al número indicado via Twilio</p>
+<p><strong>Enviar Mensaje:</strong> Llama a <code>/enviar-twilio-test</code> — envía un WhatsApp real al número indicado via Twilio</p>
         </div>
       </div>
     </div>
