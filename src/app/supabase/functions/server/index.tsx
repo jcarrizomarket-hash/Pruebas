@@ -2648,15 +2648,17 @@ app.post('/enviar-mensaje-grupal', async (c) => {
       return c.json({ success: false, error: 'No hay camareros asignados' });
     }
     
-    const whatsappApiKey = Deno.env.get('WHATSAPP_API_KEY');
-    const whatsappPhoneId = Deno.env.get('WHATSAPP_PHONE_ID');
-    
-    console.log('🔍 Verificando configuración de WhatsApp...');
-    console.log('   WHATSAPP_API_KEY:', whatsappApiKey ? `✅ Configurado (${whatsappApiKey.substring(0, 10)}...)` : '❌ No configurado');
-    console.log('   WHATSAPP_PHONE_ID:', whatsappPhoneId ? `✅ Configurado (${whatsappPhoneId})` : '❌ No configurado');
-    
-    if (!whatsappApiKey || !whatsappPhoneId) {
-      const errorMsg = `WhatsApp no configurado correctamente. Faltan: ${!whatsappApiKey ? 'WHATSAPP_API_KEY ' : ''}${!whatsappPhoneId ? 'WHATSAPP_PHONE_ID' : ''}`;
+    const twilioAccountSid = Deno.env.get('TWILIO_ACCOUNT_SID');
+    const twilioAuthToken = Deno.env.get('TWILIO_AUTH_TOKEN');
+    const twilioFrom = Deno.env.get('TWILIO_WHATSAPP_FROM');
+
+    console.log('🔍 Verificando configuración de Twilio...');
+    console.log('   TWILIO_ACCOUNT_SID:', twilioAccountSid ? '✅ Configurado' : '❌ No configurado');
+    console.log('   TWILIO_AUTH_TOKEN:', twilioAuthToken ? '✅ Configurado' : '❌ No configurado');
+    console.log('   TWILIO_WHATSAPP_FROM:', twilioFrom || '❌ No configurado');
+
+    if (!twilioAccountSid || !twilioAuthToken || !twilioFrom) {
+      const errorMsg = `Twilio no configurado. Faltan: ${!twilioAccountSid ? 'TWILIO_ACCOUNT_SID ' : ''}${!twilioAuthToken ? 'TWILIO_AUTH_TOKEN ' : ''}${!twilioFrom ? 'TWILIO_WHATSAPP_FROM' : ''}`;
       console.log('❌', errorMsg);
       return c.json({ success: false, error: errorMsg });
     }
@@ -2697,57 +2699,54 @@ app.post('/enviar-mensaje-grupal', async (c) => {
           continue;
         }
         
-        // Limpiar número de teléfono
+        // Formatear número para Twilio: whatsapp:+34XXXXXXXXX
         let numeroLimpio = camarero.telefono.replace(/\D/g, '');
         if (numeroLimpio.length === 9) {
           numeroLimpio = '34' + numeroLimpio;
         }
-        
-        console.log(`📱 Enviando a ${camarero.nombre} ${camarero.apellido} - Tel: ${numeroLimpio}`);
-        
-        // Enviar mensaje por WhatsApp
-        const response = await fetch(`https://graph.facebook.com/v18.0/${whatsappPhoneId}/messages`, {
+        const twilioTo = `whatsapp:+${numeroLimpio}`;
+
+        console.log(`📱 Enviando a ${camarero.nombre} ${camarero.apellido} - Tel: ${twilioTo}`);
+
+        // Enviar mensaje por Twilio WhatsApp
+        const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${twilioAccountSid}/Messages.json`;
+        const credentials = btoa(`${twilioAccountSid}:${twilioAuthToken}`);
+        const body = new URLSearchParams({
+          From: twilioFrom,
+          To: twilioTo,
+          Body: mensaje
+        });
+
+        const response = await fetch(twilioUrl, {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${whatsappApiKey}`,
-            'Content-Type': 'application/json'
+            'Authorization': `Basic ${credentials}`,
+            'Content-Type': 'application/x-www-form-urlencoded'
           },
-          body: JSON.stringify({
-            messaging_product: 'whatsapp',
-            to: numeroLimpio,
-            type: 'text',
-            text: {
-              body: mensaje
-            }
-          })
+          body: body.toString()
         });
-        
+
         const result = await response.json();
-        
+
         if (response.ok) {
-          console.log(`✅ Mensaje enviado a ${camarero.nombre} ${camarero.apellido}`);
+          console.log(`✅ Mensaje enviado a ${camarero.nombre} ${camarero.apellido} - SID: ${result.sid}`);
           exitosos++;
-          resultados.push({ 
+          resultados.push({
             camarero: `${camarero.nombre} ${camarero.apellido}`,
-            telefono: numeroLimpio,
-            exito: true 
+            telefono: twilioTo,
+            exito: true,
+            sid: result.sid
           });
         } else {
-          const errorDetalle = result.error?.message || JSON.stringify(result.error) || 'Error desconocido de WhatsApp API';
+          const errorDetalle = result.message || result.error || 'Error desconocido de Twilio';
           console.log(`❌ Error enviando a ${camarero.nombre}: ${errorDetalle}`);
-          
-          // Detectar si es error de lista permitida (modo desarrollo)
-          let errorMostrar = errorDetalle;
-          if (errorDetalle.includes('not in allowed list') || errorDetalle.includes('#131030')) {
-            errorMostrar = 'Tu cuenta de WhatsApp está en modo desarrollo. Agrega este número a la lista permitida en Meta Business.';
-          }
-          
+
           fallidos++;
           resultados.push({ 
             camarero: `${camarero.nombre} ${camarero.apellido}`,
             telefono: numeroLimpio,
             exito: false,
-            error: errorMostrar
+            error: errorDetalle
           });
         }
       } catch (error) {
@@ -2769,14 +2768,14 @@ app.post('/enviar-mensaje-grupal', async (c) => {
       const primerError = resultados.find(r => !r.exito)?.error || 'Todos los envíos fallaron';
       
       // Detectar tipo de error predominante
-      const hayErroresWhatsApp = resultados.some(r => !r.exito && (r.error.includes('modo desarrollo') || r.error.includes('#131030') || r.error.includes('not in allowed list')));
+      const hayErroresSandbox = resultados.some(r => !r.exito && (r.error.includes('unverified') || r.error.includes('not in allowed list') || r.error.includes('sandbox')));
       const hayErroresTelefono = resultados.some(r => !r.exito && r.error.includes('Sin teléfono'));
-      
+
       let mensajeError = primerError;
-      if (hayErroresWhatsApp && hayErroresTelefono) {
-        mensajeError = `Múltiples errores: WhatsApp en modo desarrollo y perfiles sin teléfono. ${primerError}`;
-      } else if (hayErroresWhatsApp) {
-        mensajeError = `#131030 - WhatsApp en modo desarrollo. Agrega los números a la lista permitida o actualiza a producción.`;
+      if (hayErroresSandbox && hayErroresTelefono) {
+        mensajeError = `Múltiples errores: número no unido al sandbox de Twilio y perfiles sin teléfono.`;
+      } else if (hayErroresSandbox) {
+        mensajeError = `El número destino no está unido al sandbox de Twilio. Envía "join <keyword>" al +14155238886 desde ese número.`;
       } else if (hayErroresTelefono) {
         mensajeError = `Algunos perfiles no tienen teléfono registrado. Actualízalos en la sección Personal.`;
       }

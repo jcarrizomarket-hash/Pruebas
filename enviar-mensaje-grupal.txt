@@ -1,0 +1,175 @@
+// ============== ENVÍOS - MENSAJES GRUPALES ==============
+// Enviar mensaje de confirmación a todos los camareros asignados a un evento
+app.post('/enviar-mensaje-grupal', async (c) => {
+  try {
+    const { pedidoId, mensaje } = await c.req.json();
+    console.log('📤 Enviando mensaje grupal para pedido:', pedidoId);
+
+    // Obtener pedido desde SQL
+    const pedidoSQL = await db.obtenerPedidoPorId(supabase, pedidoId);
+    if (!pedidoSQL) {
+      console.log('❌ Pedido no encontrado:', pedidoId);
+      return c.json({ success: false, error: 'Pedido no encontrado' });
+    }
+
+    // Cargar extras (incluye asignaciones) del KV store
+    const extras = await kv.get(`pedido_extras:${pedidoId}`) || {};
+
+    const asignaciones = extras.asignaciones || [];
+    if (asignaciones.length === 0) {
+      console.log('❌ No hay camareros asignados al pedido');
+      return c.json({ success: false, error: 'No hay camareros asignados' });
+    }
+
+    const twilioAccountSid = Deno.env.get('TWILIO_ACCOUNT_SID');
+    const twilioAuthToken = Deno.env.get('TWILIO_AUTH_TOKEN');
+    const twilioFrom = Deno.env.get('TWILIO_WHATSAPP_FROM');
+
+    console.log('🔍 Verificando configuración de Twilio...');
+    console.log('   TWILIO_ACCOUNT_SID:', twilioAccountSid ? '✅ Configurado' : '❌ No configurado');
+    console.log('   TWILIO_AUTH_TOKEN:', twilioAuthToken ? '✅ Configurado' : '❌ No configurado');
+    console.log('   TWILIO_WHATSAPP_FROM:', twilioFrom || '❌ No configurado');
+
+    if (!twilioAccountSid || !twilioAuthToken || !twilioFrom) {
+      const errorMsg = `Twilio no configurado. Faltan: ${!twilioAccountSid ? 'TWILIO_ACCOUNT_SID ' : ''}${!twilioAuthToken ? 'TWILIO_AUTH_TOKEN ' : ''}${!twilioFrom ? 'TWILIO_WHATSAPP_FROM' : ''}`;
+      console.log('❌', errorMsg);
+      return c.json({ success: false, error: errorMsg });
+    }
+
+    const resultados = [];
+    let exitosos = 0;
+    let fallidos = 0;
+
+    for (const asignacion of asignaciones) {
+      try {
+        // Obtener camarero desde SQL
+        const { data: camarero } = await supabase
+          .from('camareros')
+          .select('*')
+          .eq('id', asignacion.camareroId)
+          .single();
+
+        if (!camarero) {
+          console.log(`⚠️ Camarero ${asignacion.camareroNombre} no encontrado en BD`);
+          fallidos++;
+          resultados.push({
+            camarero: asignacion.camareroNombre,
+            exito: false,
+            error: 'Camarero no encontrado en la base de datos'
+          });
+          continue;
+        }
+
+        if (!camarero.telefono) {
+          console.log(`⚠️ Camarero ${asignacion.camareroNombre} sin teléfono`);
+          fallidos++;
+          resultados.push({
+            camarero: asignacion.camareroNombre,
+            exito: false,
+            error: 'Sin teléfono registrado'
+          });
+          continue;
+        }
+
+        // Formatear número para Twilio: whatsapp:+34XXXXXXXXX
+        let numeroLimpio = camarero.telefono.replace(/\D/g, '');
+        if (numeroLimpio.length === 9) {
+          numeroLimpio = '34' + numeroLimpio;
+        }
+        const twilioTo = `whatsapp:+${numeroLimpio}`;
+
+        console.log(`📱 Enviando a ${camarero.nombre} ${camarero.apellido} - Tel: ${twilioTo}`);
+
+        // Enviar mensaje por Twilio WhatsApp
+        const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${twilioAccountSid}/Messages.json`;
+        const credentials = btoa(`${twilioAccountSid}:${twilioAuthToken}`);
+        const body = new URLSearchParams({
+          From: twilioFrom,
+          To: twilioTo,
+          Body: mensaje
+        });
+
+        const response = await fetch(twilioUrl, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Basic ${credentials}`,
+            'Content-Type': 'application/x-www-form-urlencoded'
+          },
+          body: body.toString()
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+          console.log(`✅ Mensaje enviado a ${camarero.nombre} ${camarero.apellido} - SID: ${result.sid}`);
+          exitosos++;
+          resultados.push({
+            camarero: `${camarero.nombre} ${camarero.apellido}`,
+            telefono: twilioTo,
+            exito: true,
+            sid: result.sid
+          });
+        } else {
+          const errorDetalle = result.message || result.error || 'Error desconocido de Twilio';
+          console.log(`❌ Error enviando a ${camarero.nombre}: ${errorDetalle}`);
+
+          fallidos++;
+          resultados.push({
+            camarero: `${camarero.nombre} ${camarero.apellido}`,
+            telefono: twilioTo,
+            exito: false,
+            error: errorDetalle
+          });
+        }
+      } catch (error) {
+        console.log(`❌ Error procesando camarero ${asignacion.camareroNombre}:`, error);
+        fallidos++;
+        resultados.push({
+          camarero: asignacion.camareroNombre,
+          exito: false,
+          error: String(error)
+        });
+      }
+    }
+
+    console.log(`📊 Resumen: ${exitosos} exitosos, ${fallidos} fallidos`);
+    console.log('📋 Detalles:', JSON.stringify(resultados, null, 2));
+
+    // Si no hubo exitosos, devolver error detallado
+    if (exitosos === 0 && fallidos > 0) {
+      const primerError = resultados.find(r => !r.exito)?.error || 'Todos los envíos fallaron';
+
+      const hayErroresSandbox = resultados.some(r => !r.exito && (r.error.includes('unverified') || r.error.includes('not in allowed list') || r.error.includes('sandbox')));
+      const hayErroresTelefono = resultados.some(r => !r.exito && r.error.includes('Sin teléfono'));
+
+      let mensajeError = primerError;
+      if (hayErroresSandbox && hayErroresTelefono) {
+        mensajeError = `Múltiples errores: número no unido al sandbox de Twilio y perfiles sin teléfono.`;
+      } else if (hayErroresSandbox) {
+        mensajeError = `El número destino no está unido al sandbox de Twilio. Envía "join <keyword>" al +14155238886 desde ese número.`;
+      } else if (hayErroresTelefono) {
+        mensajeError = `Algunos perfiles no tienen teléfono registrado. Actualízalos en la sección Personal.`;
+      }
+
+      return c.json({
+        success: false,
+        error: `No se pudo enviar a ningún camarero. ${mensajeError}`,
+        exitosos: 0,
+        fallidos,
+        total: asignaciones.length,
+        resultados
+      });
+    }
+
+    return c.json({
+      success: exitosos > 0,
+      exitosos,
+      fallidos,
+      total: asignaciones.length,
+      resultados
+    });
+  } catch (error) {
+    console.log('❌ Error al enviar mensaje grupal:', error);
+    return c.json({ success: false, error: `Error del servidor: ${String(error)}` }, 500);
+  }
+});
