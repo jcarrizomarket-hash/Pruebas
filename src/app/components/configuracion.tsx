@@ -4,6 +4,7 @@ import { WhatsAppConfig } from './whatsapp-config';
 import { TestPanel } from './test-panel';
 import { TestEmail } from './test-email';
 import { WhatsAppTest } from './whatsapp-test';
+import { TwilioTest } from './twilio-test';
 import { WhatsAppChatbotConfig } from './whatsapp-chatbot-config';
 import { PasswordControlPanel } from './password-control-panel';
 import { AlertasConfig } from './alertas-config';
@@ -18,7 +19,7 @@ interface ConfiguracionProps {
 }
 
 export function Configuracion({ baseUrl, publicAnonKey, camareros = [], coordinadores = [], pedidos = [], clientes = [] }: ConfiguracionProps) {
-  const [activeSubTab, setActiveSubTab] = useState<'whatsapp' | 'chatbot' | 'whatsapp-test' | 'test-panel' | 'test-email' | 'passwords' | 'notificaciones' | 'alertas' | 'utilidades'>('whatsapp');
+  const [activeSubTab, setActiveSubTab] = useState<'whatsapp' | 'chatbot' | 'whatsapp-test' | 'twilio-test' | 'test-panel' | 'test-email' | 'passwords' | 'notificaciones' | 'alertas' | 'utilidades'>('whatsapp');
 
   const subTabs = [
     { id: 'whatsapp' as const, label: 'WhatsApp', icon: MessageSquare },
@@ -26,6 +27,7 @@ export function Configuracion({ baseUrl, publicAnonKey, camareros = [], coordina
     { id: 'notificaciones' as const, label: 'Notificaciones', icon: Bell },
     { id: 'alertas' as const, label: '🔔 Alertas de Servicio', icon: Bell },
     { id: 'whatsapp-test' as const, label: '🧪 Test de WhatsApp', icon: TestTube2 },
+    { id: 'twilio-test' as const, label: '📞 Test de Twilio', icon: TestTube2 },
     { id: 'test-panel' as const, label: 'Panel de Pruebas', icon: TestTube },
     { id: 'test-email' as const, label: 'Prueba de Email', icon: Mail },
     { id: 'passwords' as const, label: 'Contraseñas y Usuarios', icon: Key },
@@ -211,6 +213,10 @@ export function Configuracion({ baseUrl, publicAnonKey, camareros = [], coordina
             />
           )}
           
+          {activeSubTab === 'twilio-test' && (
+            <TwilioTest baseUrl={baseUrl} publicAnonKey={publicAnonKey} />
+          )}
+
           {activeSubTab === 'test-panel' && (
             <TestPanel />
           )}

@@ -3139,12 +3139,28 @@ app.get('/pedidos/:id/qr-token', async (c) => {
     });
   } catch (error) {
     console.error('❌ Error completo al generar token QR:', error);
-    console.error('❌ Error stack:', error instanceof Error ? error.stack : 'N/A');
-    console.error('❌ Error mensaje:', error instanceof Error ? error.message : String(error));
+    console.error('❌ Error tipo:', typeof error);
+    console.error('❌ Error constructor:', error?.constructor?.name);
+    
+    let errorMessage = 'Error desconocido';
+    let errorDetails = undefined;
+    
+    if (error instanceof Error) {
+      errorMessage = error.message;
+      errorDetails = error.stack;
+    } else if (error && typeof error === 'object') {
+      errorMessage = JSON.stringify(error);
+      errorDetails = 'Error serializado: ' + errorMessage;
+    } else {
+      errorMessage = String(error);
+    }
+    
+    console.error('❌ Error procesado:', errorMessage);
+    
     return c.json({ 
       success: false, 
-      error: error instanceof Error ? error.message : String(error),
-      details: error instanceof Error ? error.stack : undefined
+      error: errorMessage,
+      details: errorDetails
     }, 500);
   }
 });

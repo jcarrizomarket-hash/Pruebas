@@ -44,7 +44,7 @@ const getHeaders = (includeSecret: boolean = false): HeadersInit => {
 
   // Agregar secret header si se requiere (para operaciones mutantes)
   if (includeSecret && typeof import.meta !== 'undefined') {
-    const fnSecret = import.meta.env?.VITE_SUPABASE_FN_SECRET;
+    const fnSecret = import.meta.env?.VITE_FN_SECRET;
     if (fnSecret) {
       headers['x-fn-secret'] = fnSecret;
     }

@@ -63,8 +63,8 @@ export function TestPanel() {
     }, ...prev.slice(0, 9)]); // Mantener últimos 10 resultados
   };
 
-  const verificarConfigWhatsApp = async () => {
-    setResultado('Verificando configuración de WhatsApp...');
+  const checkWhatsAppConfig = async () => {
+    setLoading(true);
     try {
       const response = await fetch(
         `https://${projectId}.supabase.co/functions/v1/make-server-ce05fe95/verificar-whatsapp-config`,
@@ -75,26 +75,26 @@ export function TestPanel() {
           }
         }
       );
-      
       const data = await response.json();
-      
-      if (data.success) {
-        setResultado(`✅ WhatsApp configurado correctamente\nAPI Key: ${data.data.apiKeyPresente ? '✓' : '✗'}\nPhone ID: ${data.data.phoneIdPresente ? '✓' : '✗'}`);
+      setWhatsappStatus(data);
+      if (data.configured) {
+        addResult('Config WhatsApp', 'success', 'WhatsApp configurado correctamente', data);
       } else {
-        setResultado(`❌ Error: ${data.error}`);
+        addResult('Config WhatsApp', 'error', data.error || 'WhatsApp no está configurado', data);
       }
     } catch (error) {
-      setResultado(`❌ Error de conexión: ${error.message}`);
+      addResult('Config WhatsApp', 'error', 'Error de conexión', { error: String(error) });
+    } finally {
+      setLoading(false);
     }
   };
 
   const enviarMensajePrueba = async () => {
-    if (!telefono.trim()) {
-      setResultado('❌ Por favor ingresa un número de teléfono');
+    if (!testData.whatsapp.phone.trim()) {
+      addResult('Envío WhatsApp', 'error', 'Por favor ingresa un número de teléfono');
       return;
     }
-    
-    setResultado('Enviando mensaje de prueba...');
+    setLoading(true);
     try {
       const response = await fetch(
         `https://${projectId}.supabase.co/functions/v1/make-server-ce05fe95/enviar-whatsapp`,
@@ -110,16 +110,14 @@ export function TestPanel() {
           })
         }
       );
-      
       const data = await response.json();
-      
       if (data.success) {
-        addResult('Envío WhatsApp', 'success', `Mensaje enviado exitosamente a ${testData.whatsapp.phone}`, data);
+        addResult('Envío WhatsApp', 'success', `Mensaje enviado a ${testData.whatsapp.phone}`, data);
       } else {
         addResult('Envío WhatsApp', 'error', data.error || 'Error al enviar mensaje', data);
       }
     } catch (error) {
-      addResult('Envío WhatsApp', 'error', 'Error de conexión', error);
+      addResult('Envío WhatsApp', 'error', 'Error de conexión', { error: String(error) });
     } finally {
       setLoading(false);
     }

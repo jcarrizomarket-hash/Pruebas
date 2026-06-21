@@ -30,25 +30,40 @@ export function QRControl({ pedido, baseUrl, publicAnonKey, onClose }: QRControl
     setLoading(true);
     try {
       console.log('🔄 Cargando token QR para pedido:', pedido.id);
-      
+      console.log('🌐 Base URL:', baseUrl);
+
       // Extraer solo la parte numérica del ID si tiene el prefijo "pedido:"
       const pedidoId = pedido.id.includes(':') ? pedido.id.split(':')[1] : pedido.id;
       console.log('📋 ID extraído:', pedidoId);
-      
-      const response = await fetch(`${baseUrl}/pedidos/${pedidoId}/qr-token`, {
+
+      const url = `${baseUrl}/pedidos/${pedidoId}/qr-token`;
+      console.log('🔗 URL completa:', url);
+
+      const response = await fetch(url, {
         headers: { Authorization: `Bearer ${publicAnonKey}` }
       });
-      
-      console.log('📡 Respuesta recibida:', response.status);
+
+      console.log('📡 Respuesta recibida:', response.status, response.statusText);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('❌ Error HTTP:', response.status, errorText);
+        return;
+      }
+
       const data = await response.json();
-      console.log('📦 Datos recibidos:', data);
-      
+      console.log('📦 Datos recibidos:', JSON.stringify(data, null, 2));
+
       if (data.success) {
         console.log('✅ Token cargado exitosamente:', data.token);
         console.log('🔗 URL generada:', data.url);
         setQrData({ token: data.token, url: data.url });
       } else {
-        console.error('❌ No se pudo cargar el token:', data);
+        console.error('❌ No se pudo cargar el token');
+        console.error('❌ Error recibido:', data.error);
+        console.error('❌ Tipo de error:', typeof data.error);
+        console.error('❌ Error serializado:', JSON.stringify(data.error, null, 2));
+        console.error('❌ Respuesta completa:', JSON.stringify(data, null, 2));
       }
     } catch (error) {
       console.error('❌ Error al cargar token QR:', error);
