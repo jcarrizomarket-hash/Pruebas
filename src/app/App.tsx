@@ -10,6 +10,7 @@ import { Configuracion } from './components/configuracion';
 import { Login } from './components/login';
 import { PerfilView } from './components/perfil-view';
 import { QRScanPage } from './components/qr-scan-page';
+import { ConfirmarPage } from './components/confirmar-page';
 import { InitTestPanel } from './components/init-test-panel';
 import { TestEdgeFunction } from './components/TestEdgeFunction';
 import { projectId, publicAnonKey } from './utils/supabase/info';
@@ -41,10 +42,17 @@ export default function App() {
     ? `https://${projectId}.supabase.co/functions/v1/make-server-prod`
     : `https://${projectId}.supabase.co/functions/v1/make-server-ce05fe95`;
 
-  // Detectar si la URL es de escaneo QR
+  // Detectar rutas públicas por URL
   const currentPath = window.location.pathname;
   const isQRScanPath = currentPath.includes('/qr-scan/');
   const qrToken = isQRScanPath ? currentPath.split('/qr-scan/')[1] : null;
+  const isConfirmarPath = currentPath.includes('/confirmar/');
+  const isNoConfirmarPath = currentPath.includes('/no-confirmar/');
+  const confirmarToken = isConfirmarPath
+    ? currentPath.split('/confirmar/')[1]
+    : isNoConfirmarPath
+    ? currentPath.split('/no-confirmar/')[1]
+    : null;
 
   const cargarDatos = async () => {
     try {
@@ -118,6 +126,18 @@ export default function App() {
         <QRScanPage token={qrToken} baseUrl={baseUrl} publicAnonKey={publicAnonKey} />
         <Toaster position="top-right" />
       </>
+    );
+  }
+
+  // Si es una URL de confirmación/rechazo de asistencia
+  if (confirmarToken && (isConfirmarPath || isNoConfirmarPath)) {
+    return (
+      <ConfirmarPage
+        token={confirmarToken}
+        accion={isConfirmarPath ? 'confirmar' : 'no-confirmar'}
+        baseUrl={baseUrl}
+        publicAnonKey={publicAnonKey}
+      />
     );
   }
 

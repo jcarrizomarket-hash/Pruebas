@@ -2629,7 +2629,7 @@ app.get('/diagnostico-whatsapp', async (c) => {
 // Enviar mensaje de confirmación a todos los camareros asignados a un evento
 app.post('/enviar-mensaje-grupal', async (c) => {
   try {
-    const { pedidoId, mensaje } = await c.req.json();
+    const { pedidoId, mensaje, appUrl } = await c.req.json();
     console.log('📤 Enviando mensaje grupal para pedido:', pedidoId);
     
     // Obtener pedido desde SQL
@@ -2712,8 +2712,7 @@ if (errorAsignaciones || !asignaciones || asignaciones.length === 0) {
 
         // Generar token único de confirmación para este camarero
         const token = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
-        const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
-        const baseUrlFn = `${supabaseUrl}/functions/v1/make-server-ce05fe95`;
+        const baseUrlFn = appUrl || Deno.env.get('APP_URL') || Deno.env.get('SUPABASE_URL') || '';
 
         // Guardar token en la tabla confirmaciones
         await supabase.from('confirmaciones').insert({

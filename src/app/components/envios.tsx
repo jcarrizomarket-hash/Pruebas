@@ -139,7 +139,8 @@ Por favor confirma tu asistencia respondiendo este mensaje.`;
         },
         body: JSON.stringify({
           pedidoId: selectedEvento.id,
-          mensaje
+          mensaje,
+          appUrl: window.location.origin
         })
       });
 
