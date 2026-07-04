@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { Send, MessageSquare, Users, Bot, CheckCircle, Clock, MapPin, Calendar, X, Phone, Mail as MailIcon, ChevronDown, ChevronUp, FileCheck } from 'lucide-react';
+import { EnvioMensaje } from './envio-mensaje';
 
 interface EnviosProps {
   pedidos: any[];
@@ -8,10 +9,12 @@ interface EnviosProps {
   clientes: any[];
   baseUrl: string;
   publicAnonKey: string;
+  setPedidos?: (pedidos: any[]) => void;
+  cargarDatos?: () => Promise<void>;
 }
 
-export function Envios({ pedidos, camareros, coordinadores, clientes, baseUrl, publicAnonKey }: EnviosProps) {
-  const [activeTab, setActiveTab] = useState<'servicios' | 'grupal' | 'coordinadores' | 'chatbot' | 'partes'>('servicios');
+export function Envios({ pedidos, camareros, coordinadores, clientes, baseUrl, publicAnonKey, setPedidos, cargarDatos }: EnviosProps) {
+  const [activeTab, setActiveTab] = useState<'servicios' | 'confirmar-camareros' | 'grupal' | 'coordinadores' | 'chatbot' | 'partes'>('servicios');
   const [selectedEvento, setSelectedEvento] = useState<any>(null);
   const [mensajeTipo, setMensajeTipo] = useState<'catering' | 'restauracion'>('restauracion');
   const [showAsistentes, setShowAsistentes] = useState(false);
@@ -82,6 +85,7 @@ export function Envios({ pedidos, camareros, coordinadores, clientes, baseUrl, p
 
   const tabs = [
     { id: 'servicios' as const, label: 'Envíos Servicios', icon: Send },
+    { id: 'confirmar-camareros' as const, label: 'Confirmar Camareros', icon: MessageSquare },
     { id: 'partes' as const, label: 'Partes de Servicios', icon: FileCheck },
     { id: 'grupal' as const, label: 'Chat Grupal del Evento', icon: MessageSquare },
     { id: 'coordinadores' as const, label: 'Chat de Coordinadores', icon: Users },
@@ -97,7 +101,7 @@ export function Envios({ pedidos, camareros, coordinadores, clientes, baseUrl, p
     });
   }, [pedidos]);
 
-  // Función para enviar mensaje de confirmación
+  // Función para enviar mensaje de confirmación con botones por Twilio
   const enviarConfirmacion = async () => {
     if (!selectedEvento) return;
 
@@ -107,101 +111,81 @@ export function Envios({ pedidos, camareros, coordinadores, clientes, baseUrl, p
       return;
     }
 
-    const mensajeBase = mensajeTipo === 'catering' 
-      ? '🍽️ *Confirmación de Servicio - CATERING*'
-      : '🍴 *Confirmación de Servicio - RESTAURACIÓN*';
-
-    const mensaje = `${mensajeBase}
-
-📅 *Fecha:* ${new Date(selectedEvento.diaEvento).toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-🕐 *Horario:* ${selectedEvento.horaEntrada} - ${selectedEvento.horaSalida}
-📍 *Lugar:* ${selectedEvento.lugar}
-👔 *Dress Code:* Camisa ${selectedEvento.camisa}
-${selectedEvento.catering === 'si' ? '✅ Incluye catering' : ''}
-
-${selectedEvento.notas ? `📝 *Notas:* ${selectedEvento.notas}` : ''}
-
-Por favor confirma tu asistencia respondiendo este mensaje.`;
+    const baseUrlConfirmacion = `${baseUrl}`;
+    const camisa = selectedEvento.camisa || selectedEvento.color_camisa || 'negra';
+    const fechaEvento = new Date(selectedEvento.diaEvento).toLocaleDateString('es-ES', {
+      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+    });
 
     console.log('📤 Iniciando envío de confirmación para pedido:', selectedEvento.id);
-    
-    try {
-      const response = await fetch(`${baseUrl}/enviar-mensaje-grupal`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${publicAnonKey}`
-        },
-        body: JSON.stringify({
-          pedidoId: selectedEvento.id,
-          mensaje
-        })
-      });
 
-      console.log('📡 Response status:', response.status);
-      const result = await response.json();
-      console.log('📋 Response data:', result);
-      
-      if (result.success) {
-        const mensajeExito = `✅ Mensaje enviado a ${result.exitosos || asignados.length} camarero(s)${result.fallidos > 0 ? `\n⚠️ ${result.fallidos} fallidos` : ''}`;
-        
-        // Si hay fallos, mostrar detalles
-        if (result.fallidos > 0 && result.resultados) {
-          const fallidos = result.resultados.filter(r => !r.exito);
-          const detallesFallidos = fallidos.map(f => `• ${f.camarero}: ${f.error}`).join('\n');
-          alert(`${mensajeExito}\n\n❌ Fallos:\n${detallesFallidos}`);
-        } else {
-          alert(mensajeExito);
-        }
-        
-        setSelectedEvento(null);
-      } else {
-        // Mensaje de error mejorado
-        const errorMsg = result.error || 'Error desconocido';
-        console.error('❌ Error del servidor:', errorMsg);
-        console.error('📋 Detalles completos:', result);
-        
-        // Detectar error específico de WhatsApp allowed list
-        if (errorMsg.includes('#131030') || errorMsg.includes('not in allowed list') || errorMsg.includes('modo desarrollo')) {
-          // Mostrar información detallada sobre los camareros afectados
-          let detallesCamareros = '';
-          if (result.resultados && result.resultados.length > 0) {
-            const camarerosAfectados = result.resultados.filter(r => !r.exito && (r.error.includes('modo desarrollo') || r.error.includes('#131030')));
-            if (camarerosAfectados.length > 0) {
-              detallesCamareros = '\n\n📱 Números afectados:\n' + camarerosAfectados.map(c => `• ${c.camarero} - ${c.telefono || 'Sin teléfono'}`).join('\n');
-            }
-          }
-          
-          alert(`⚠️ ERROR DE WHATSAPP BUSINESS API\n\n🔒 Tu cuenta está en modo TEST/SANDBOX\n\n❌ Los números NO están en la lista de permitidos.${detallesCamareros}\n\n✅ SOLUCIÓN RÁPIDA:\n1. Ve a Facebook Business Manager\n2. WhatsApp → API Setup → Phone Numbers\n3. Agrega cada número a "Allowed list"\n\n💡 SOLUCIÓN PERMANENTE:\n1. Ve a Facebook Business Manager\n2. WhatsApp → API Setup\n3. Click en "Upgrade to Production"\n4. Completa la verificación (1-2 días)\n5. Podrás enviar a cualquier número sin restricciones\n\n🔍 Error técnico: ${errorMsg}`);
-        } else if (errorMsg.includes('WhatsApp no configurado')) {
-          alert(`❌ WhatsApp no está configurado correctamente.\n\n📝 Para configurarlo:\n1. Ve a Configuración → WhatsApp\n2. Completa WHATSAPP_API_KEY y WHATSAPP_PHONE_ID\n3. Prueba la conexión\n\n🔍 Error técnico: ${errorMsg}`);
-        } else if (errorMsg.includes('sin teléfono') || errorMsg.includes('Sin teléfono')) {
-          // Mostrar qué camareros no tienen teléfono
-          let detalleSinTelefono = '';
-          if (result.resultados && result.resultados.length > 0) {
-            const sinTelefono = result.resultados.filter(r => !r.exito && r.error.includes('Sin teléfono'));
-            if (sinTelefono.length > 0) {
-              detalleSinTelefono = '\n\n👥 Perfiles sin teléfono:\n' + sinTelefono.map(c => `• ${c.camarero}`).join('\n');
-            }
-          }
-          
-          alert(`⚠️ Algunos perfiles no tienen número de teléfono registrado.${detalleSinTelefono}\n\n📝 Para solucionarlo:\n1. Ve a la sección Personal\n2. Edita cada perfil afectado\n3. Agrega su número de teléfono\n\n🔍 Error técnico: ${errorMsg}`);
-        } else {
-          // Mostrar detalles de resultados si existen
-          let detallesExtra = '';
-          if (result.resultados && result.resultados.length > 0) {
-            const errores = result.resultados.filter(r => !r.exito);
-            if (errores.length > 0) {
-              detallesExtra = '\n\n❌ Detalles:\n' + errores.map(e => `• ${e.camarero}: ${e.error}`).join('\n');
-            }
-          }
-          alert(`❌ Error al enviar: ${errorMsg}${detallesExtra}\n\n💡 Verifica la consola del navegador (F12) para más detalles.`);
-        }
+    let exitosos = 0;
+    let fallidos = 0;
+    const errores: string[] = [];
+
+    for (const asignacion of asignados) {
+      const cam = camareros.find(c => c.id === asignacion.camareroId);
+      if (!cam?.telefono) {
+        fallidos++;
+        errores.push(`${asignacion.camareroNombre}: sin teléfono`);
+        continue;
       }
-    } catch (error) {
-      console.error('❌ Error al enviar:', error);
-      alert(`❌ Error de conexión al enviar el mensaje.\n\nDetalles: ${error instanceof Error ? error.message : 'Error desconocido'}\n\n💡 Abre la consola del navegador (F12) para más información.`);
+
+      // Generar token único por camarero
+      const token = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
+
+      try {
+        // Guardar token en el servidor
+        await fetch(`${baseUrl}/guardar-token`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${publicAnonKey}` },
+          body: JSON.stringify({ token, pedidoId: selectedEvento.id, camareroId: cam.id, coordinadorId: selectedEvento.coordinadorId || '' })
+        });
+
+        const confirmarUrl = `${baseUrlConfirmacion}/confirmar/${token}`;
+        const noConfirmarUrl = `${baseUrlConfirmacion}/no-confirmar/${token}`;
+
+        const mensaje = `${mensajeTipo === 'catering' ? '🍽️ Confirmación de Servicio - CATERING' : '🍴 Confirmación de Servicio - RESTAURACIÓN'}
+
+📅 ${fechaEvento}
+🕐 ${selectedEvento.horaEntrada} - ${selectedEvento.horaSalida}
+📍 ${selectedEvento.lugar}
+👔 Dress Code: Camisa ${camisa}
+${selectedEvento.catering === 'si' ? '✅ Incluye catering\n' : ''}${selectedEvento.notas ? `📝 ${selectedEvento.notas}\n` : ''}
+Por favor confirma tu asistencia:
+
+✅ ACEPTAR: ${confirmarUrl}
+
+❌ RECHAZAR: ${noConfirmarUrl}
+
+Gracias`;
+
+        const res = await fetch(`${baseUrl}/enviar-twilio-test`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${publicAnonKey}` },
+          body: JSON.stringify({ telefono: cam.telefono, mensaje })
+        });
+
+        const result = await res.json();
+        if (result.success) {
+          exitosos++;
+        } else {
+          fallidos++;
+          errores.push(`${cam.nombre} ${cam.apellido}: ${result.error || result.message}`);
+        }
+      } catch (error) {
+        fallidos++;
+        errores.push(`${cam.nombre} ${cam.apellido}: error de conexión`);
+      }
     }
+
+    const resumen = `✅ Enviado a ${exitosos} camarero(s)${fallidos > 0 ? `\n⚠️ ${fallidos} fallidos:\n${errores.join('\n')}` : ''}`;
+    alert(resumen);
+
+    if (exitosos > 0) {
+      setSelectedEvento(null);
+    }
+
   };
 
   // Función para enviar mensaje al chat grupal del evento
@@ -393,7 +377,7 @@ ${evento.ubicacion ? `📍 Ubicación: ${evento.ubicacion}` : ''}
 👔 *DETALLES DEL SERVICIO*
 ━━━━━━━━━━━━━━━━━━━━━━━
 Tipo: ${evento.catering === 'si' ? 'Catering' : 'Restauración'}
-Dress Code: Camisa ${evento.camisa}
+Dress Code: Camisa ${evento.camisa || evento.color_camisa || 'negra'}
 ${evento.notas ? `\n📝 Notas: ${evento.notas}` : ''}
 
 ━━━━━━━━━━━━━━━━━━━━━━━
@@ -541,56 +525,6 @@ Generado: ${new Date().toLocaleString('es-ES')}`;
           {/* 1. ENVÍOS SERVICIOS */}
           {activeTab === 'servicios' && (
             <div className="space-y-4">
-              {/* Alerta de configuración de WhatsApp */}
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-start gap-3 flex-1">
-                    <MessageSquare className="w-5 h-5 text-blue-600 mt-0.5" />
-                    <div className="flex-1">
-                      <p className="font-semibold text-blue-900 mb-1">ℹ️ Configuración de WhatsApp</p>
-                      <p className="text-sm text-blue-700">
-                        Para enviar confirmaciones, primero verifica que WhatsApp esté configurado en <strong>Configuración → WhatsApp</strong>.
-                        Los camareros también deben tener números de teléfono registrados en <strong>Personal</strong>.
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={diagnosticarWhatsApp}
-                    className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 whitespace-nowrap"
-                  >
-                    🔍 Diagnosticar
-                  </button>
-                </div>
-              </div>
-
-              {/* Alerta de modo TEST/SANDBOX */}
-              <div className="bg-yellow-50 border border-yellow-300 rounded-lg p-4">
-                <div className="flex items-start gap-3">
-                  <div className="text-2xl">⚠️</div>
-                  <div className="flex-1">
-                    <p className="font-semibold text-yellow-900 mb-1">Modo TEST de WhatsApp Business API</p>
-                    <p className="text-sm text-yellow-800 mb-2">
-                      Tu cuenta de WhatsApp está en modo <strong>TEST/SANDBOX</strong>. Solo puedes enviar mensajes a números agregados manualmente a la "allowed list".
-                    </p>
-                    <div className="text-sm text-yellow-800 space-y-1">
-                      <p className="font-medium">✅ Para enviar a un número específico:</p>
-                      <ol className="ml-4 space-y-0.5 list-decimal">
-                        <li>Ve a <strong>Facebook Business Manager</strong></li>
-                        <li>WhatsApp → <strong>API Setup</strong> → <strong>Phone Numbers</strong></li>
-                        <li>Agrega el número a <strong>"Allowed list"</strong></li>
-                      </ol>
-                      <p className="font-medium mt-2">🚀 Para enviar a cualquier número (recomendado):</p>
-                      <ol className="ml-4 space-y-0.5 list-decimal">
-                        <li>Ve a <strong>Facebook Business Manager</strong></li>
-                        <li>WhatsApp → <strong>API Setup</strong></li>
-                        <li>Click en <strong>"Upgrade to Production"</strong></li>
-                        <li>Completa la verificación (1-2 días)</li>
-                      </ol>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-gray-800">Eventos Próximos</h3>
                 <span className="text-sm text-gray-500">{eventosOrdenados.length} eventos</span>
@@ -651,7 +585,20 @@ Generado: ${new Date().toLocaleString('es-ES')}`;
             </div>
           )}
 
-          {/* 2. PARTES DE SERVICIOS */}
+          {/* 2. CONFIRMAR CAMAREROS */}
+          {activeTab === 'confirmar-camareros' && (
+            <EnvioMensaje
+              pedidos={pedidos}
+              camareros={camareros}
+              coordinadores={coordinadores}
+              baseUrl={baseUrl}
+              publicAnonKey={publicAnonKey}
+              setPedidos={setPedidos || (() => {})}
+              cargarDatos={cargarDatos || (async () => {})}
+            />
+          )}
+
+          {/* 3. PARTES DE SERVICIOS */}
           {activeTab === 'partes' && (
             <div className="space-y-4">
               <div className="flex items-center justify-between mb-4">
@@ -1206,7 +1153,7 @@ Generado: ${new Date().toLocaleString('es-ES')}`;
                         </div>
                         <div className="flex">
                           <span className="font-semibold w-24">Dress Code:</span>
-                          <span>Camisa {selectedEvento.camisa}</span>
+                          <span>Camisa {selectedEvento.camisa || selectedEvento.color_camisa || 'negra'}</span>
                         </div>
                         {selectedEvento.notas && (
                           <div className="flex">
@@ -1357,7 +1304,7 @@ Generado: ${new Date().toLocaleString('es-ES')}`;
                         <strong>📍 Lugar:</strong> {selectedEvento.lugar}
                       </p>
                       <p>
-                        <strong>👔 Dress Code:</strong> Camisa {selectedEvento.camisa}
+                        <strong>👔 Dress Code:</strong> Camisa {selectedEvento.camisa || selectedEvento.color_camisa || 'negra'}
                       </p>
                       {selectedEvento.catering === 'si' && (
                         <p className="text-green-600">✅ Incluye catering</p>
@@ -1369,8 +1316,17 @@ Generado: ${new Date().toLocaleString('es-ES')}`;
                       )}
                     </div>
 
-                    <div className="pt-2 border-t border-gray-200 mt-3 text-sm italic text-gray-600">
-                      Por favor confirma tu asistencia respondiendo este mensaje.
+                    <div className="pt-2 border-t border-gray-200 mt-3 space-y-2">
+                      <p className="text-sm text-gray-600 italic">Por favor confirma tu asistencia:</p>
+                      <div className="flex gap-2">
+                        <div className="flex-1 bg-green-500 text-white text-center py-2 px-3 rounded-lg text-sm font-semibold cursor-default">
+                          ✅ ACEPTAR
+                        </div>
+                        <div className="flex-1 bg-red-500 text-white text-center py-2 px-3 rounded-lg text-sm font-semibold cursor-default">
+                          ❌ RECHAZAR
+                        </div>
+                      </div>
+                      <p className="text-xs text-gray-400 italic">Los enlaces reales se generan al enviar</p>
                     </div>
                   </div>
                   

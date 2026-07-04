@@ -288,6 +288,8 @@ export default function App() {
             clientes={clientes}
             baseUrl={baseUrl}
             publicAnonKey={publicAnonKey}
+            setPedidos={setPedidos}
+            cargarDatos={cargarDatos}
           />
         )}
 

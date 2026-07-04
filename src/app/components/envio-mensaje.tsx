@@ -145,23 +145,44 @@ export function EnvioMensaje({ pedidos, camareros, coordinadores, baseUrl, publi
     if (!eventoSeleccionado || !coordinadorActual) return;
 
     const mensajeTexto = await generarMensaje(eventoSeleccionado, camarero);
-    
-    // Crear mensaje local
-    const nuevoMensajeObj = {
+
+    // Mostrar mensaje en el chat local
+    setMensajes([{
       id: `msg-${Date.now()}`,
       texto: mensajeTexto,
       remitente: 'coordinador',
       timestamp: new Date().toISOString(),
       estado: 'enviado'
-    };
-    
-    setMensajes([nuevoMensajeObj]);
+    }]);
 
-    // Actualizar estado a 'enviado'
-    const asignaciones = eventoSeleccionado.asignaciones.map(a => 
+    // Enviar via Twilio si el camarero tiene teléfono
+    if (camarero.telefono) {
+      try {
+        const res = await fetch(`${baseUrl}/enviar-twilio-test`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${publicAnonKey}`
+          },
+          body: JSON.stringify({
+            telefono: camarero.telefono,
+            mensaje: mensajeTexto
+          })
+        });
+        const resultado = await res.json();
+        if (!resultado.success) {
+          console.warn('⚠️ Twilio no pudo enviar el mensaje:', resultado);
+        }
+      } catch (error) {
+        console.error('Error al enviar via Twilio:', error);
+      }
+    }
+
+    // Actualizar estado de asignación a 'enviado'
+    const asignaciones = eventoSeleccionado.asignaciones.map(a =>
       a.camareroId === camarero.id ? { ...a, estado: 'enviado' } : a
     );
-    
+
     try {
       await fetch(`${baseUrl}/pedidos/${eventoSeleccionado.id}`, {
         method: 'PUT',
@@ -174,7 +195,7 @@ export function EnvioMensaje({ pedidos, camareros, coordinadores, baseUrl, publi
           asignaciones
         })
       });
-      
+
       await cargarDatos();
     } catch (error) {
       console.error('Error al actualizar estado:', error);

@@ -2639,14 +2639,16 @@ app.post('/enviar-mensaje-grupal', async (c) => {
       return c.json({ success: false, error: 'Pedido no encontrado' });
     }
     
-    // Cargar extras (incluye asignaciones) del KV store
-    const extras = await kv.get(`pedido_extras:${pedidoId}`) || {};
-    
-    const asignaciones = extras.asignaciones || [];
-    if (asignaciones.length === 0) {
-      console.log('❌ No hay camareros asignados al pedido');
-      return c.json({ success: false, error: 'No hay camareros asignados' });
-    }
+// Obtener asignaciones con datos del camarero desde SQL
+const { data: asignaciones, error: errorAsignaciones } = await supabase
+  .from('asignaciones')
+  .select('*, camareros!inner(id, nombre, apellido, telefono)')
+  .eq('pedido_id', pedidoId);
+
+if (errorAsignaciones || !asignaciones || asignaciones.length === 0) {
+  console.log('❌ No hay camareros asignados al pedido');
+  return c.json({ success: false, error: 'No hay camareros asignados' });
+}
     
     const twilioAccountSid = Deno.env.get('TWILIO_ACCOUNT_SID');
     const twilioAuthToken = Deno.env.get('TWILIO_AUTH_TOKEN');
