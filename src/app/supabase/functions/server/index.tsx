@@ -2710,13 +2710,35 @@ if (errorAsignaciones || !asignaciones || asignaciones.length === 0) {
 
         console.log(`📱 Enviando a ${camarero.nombre} ${camarero.apellido} - Tel: ${twilioTo}`);
 
+        // Generar token único de confirmación para este camarero
+        const token = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
+        const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
+        const baseUrlFn = `${supabaseUrl}/functions/v1/make-server-ce05fe95`;
+
+        // Guardar token en la tabla confirmaciones
+        await supabase.from('confirmaciones').insert({
+          token,
+          pedido_id: pedidoId,
+          camarero_codigo: camarero.codigo,
+          estado: 'pendiente'
+        });
+
+        const confirmarUrl = `${baseUrlFn}/confirmar/${token}`;
+        const noConfirmarUrl = `${baseUrlFn}/no-confirmar/${token}`;
+
+        const mensajeConBotones = `${mensaje}
+
+✅ ACEPTAR: ${confirmarUrl}
+
+❌ RECHAZAR: ${noConfirmarUrl}`;
+
         // Enviar mensaje por Twilio WhatsApp
         const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${twilioAccountSid}/Messages.json`;
         const credentials = btoa(`${twilioAccountSid}:${twilioAuthToken}`);
         const body = new URLSearchParams({
           From: twilioFrom,
           To: twilioTo,
-          Body: mensaje
+          Body: mensajeConBotones
         });
 
         const response = await fetch(twilioUrl, {

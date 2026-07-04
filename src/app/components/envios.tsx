@@ -101,7 +101,7 @@ export function Envios({ pedidos, camareros, coordinadores, clientes, baseUrl, p
     });
   }, [pedidos]);
 
-  // Función para enviar mensaje de confirmación con botones por Twilio
+  // Función para enviar mensaje de confirmación
   const enviarConfirmacion = async () => {
     if (!selectedEvento) return;
 
@@ -111,81 +111,92 @@ export function Envios({ pedidos, camareros, coordinadores, clientes, baseUrl, p
       return;
     }
 
-    const baseUrlConfirmacion = `${baseUrl}`;
     const camisa = selectedEvento.camisa || selectedEvento.color_camisa || 'negra';
-    const fechaEvento = new Date(selectedEvento.diaEvento).toLocaleDateString('es-ES', {
-      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
-    });
+    const mensajeBase = mensajeTipo === 'catering'
+      ? '🍽️ *Confirmación de Servicio - CATERING*'
+      : '🍴 *Confirmación de Servicio - RESTAURACIÓN*';
+
+    const mensaje = `${mensajeBase}
+
+📅 *Fecha:* ${new Date(selectedEvento.diaEvento).toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+🕐 *Horario:* ${selectedEvento.horaEntrada} - ${selectedEvento.horaSalida}
+📍 *Lugar:* ${selectedEvento.lugar}
+👔 *Dress Code:* Camisa ${camisa}
+${selectedEvento.catering === 'si' ? '✅ Incluye catering' : ''}
+
+${selectedEvento.notas ? `📝 *Notas:* ${selectedEvento.notas}` : ''}
+
+Por favor confirma tu asistencia respondiendo este mensaje.`;
 
     console.log('📤 Iniciando envío de confirmación para pedido:', selectedEvento.id);
 
-    let exitosos = 0;
-    let fallidos = 0;
-    const errores: string[] = [];
+    try {
+      const response = await fetch(`${baseUrl}/enviar-mensaje-grupal`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${publicAnonKey}`
+        },
+        body: JSON.stringify({
+          pedidoId: selectedEvento.id,
+          mensaje
+        })
+      });
 
-    for (const asignacion of asignados) {
-      const cam = camareros.find(c => c.id === asignacion.camareroId);
-      if (!cam?.telefono) {
-        fallidos++;
-        errores.push(`${asignacion.camareroNombre}: sin teléfono`);
-        continue;
-      }
+      console.log('📡 Response status:', response.status);
+      const result = await response.json();
+      console.log('📋 Response data:', result);
 
-      // Generar token único por camarero
-      const token = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
+      if (result.success) {
+        const mensajeExito = `✅ Mensaje enviado a ${result.exitosos || asignados.length} camarero(s)${result.fallidos > 0 ? `\n⚠️ ${result.fallidos} fallidos` : ''}`;
 
-      try {
-        // Guardar token en el servidor
-        await fetch(`${baseUrl}/guardar-token`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${publicAnonKey}` },
-          body: JSON.stringify({ token, pedidoId: selectedEvento.id, camareroId: cam.id, coordinadorId: selectedEvento.coordinadorId || '' })
-        });
-
-        const confirmarUrl = `${baseUrlConfirmacion}/confirmar/${token}`;
-        const noConfirmarUrl = `${baseUrlConfirmacion}/no-confirmar/${token}`;
-
-        const mensaje = `${mensajeTipo === 'catering' ? '🍽️ Confirmación de Servicio - CATERING' : '🍴 Confirmación de Servicio - RESTAURACIÓN'}
-
-📅 ${fechaEvento}
-🕐 ${selectedEvento.horaEntrada} - ${selectedEvento.horaSalida}
-📍 ${selectedEvento.lugar}
-👔 Dress Code: Camisa ${camisa}
-${selectedEvento.catering === 'si' ? '✅ Incluye catering\n' : ''}${selectedEvento.notas ? `📝 ${selectedEvento.notas}\n` : ''}
-Por favor confirma tu asistencia:
-
-✅ ACEPTAR: ${confirmarUrl}
-
-❌ RECHAZAR: ${noConfirmarUrl}
-
-Gracias`;
-
-        const res = await fetch(`${baseUrl}/enviar-twilio-test`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${publicAnonKey}` },
-          body: JSON.stringify({ telefono: cam.telefono, mensaje })
-        });
-
-        const result = await res.json();
-        if (result.success) {
-          exitosos++;
+        if (result.fallidos > 0 && result.resultados) {
+          const fallidos = result.resultados.filter(r => !r.exito);
+          const detallesFallidos = fallidos.map(f => `• ${f.camarero}: ${f.error}`).join('\n');
+          alert(`${mensajeExito}\n\n❌ Fallos:\n${detallesFallidos}`);
         } else {
-          fallidos++;
-          errores.push(`${cam.nombre} ${cam.apellido}: ${result.error || result.message}`);
+          alert(mensajeExito);
         }
-      } catch (error) {
-        fallidos++;
-        errores.push(`${cam.nombre} ${cam.apellido}: error de conexión`);
+
+        setSelectedEvento(null);
+      } else {
+        const errorMsg = result.error || 'Error desconocido';
+        console.error('❌ Error del servidor:', errorMsg);
+        console.error('📋 Detalles completos:', result);
+
+        if (errorMsg.includes('sandbox') || errorMsg.includes('unverified') || errorMsg.includes('not in allowed list')) {
+          let detallesCamareros = '';
+          if (result.resultados?.length > 0) {
+            const afectados = result.resultados.filter(r => !r.exito);
+            if (afectados.length > 0) {
+              detallesCamareros = '\n\n📱 Números afectados:\n' + afectados.map(c => `• ${c.camarero} - ${c.telefono || 'Sin teléfono'}`).join('\n');
+            }
+          }
+          alert(`⚠️ Twilio Sandbox\n\nEl número destino no está unido al sandbox.${detallesCamareros}\n\n✅ Solución: Envía "join <keyword>" al +14155238886 desde cada número.`);
+        } else if (errorMsg.includes('sin teléfono') || errorMsg.includes('Sin teléfono')) {
+          let detalleSinTelefono = '';
+          if (result.resultados?.length > 0) {
+            const sinTelefono = result.resultados.filter(r => !r.exito && r.error.includes('Sin teléfono'));
+            if (sinTelefono.length > 0) {
+              detalleSinTelefono = '\n\n👥 Perfiles sin teléfono:\n' + sinTelefono.map(c => `• ${c.camarero}`).join('\n');
+            }
+          }
+          alert(`⚠️ Algunos perfiles no tienen número de teléfono registrado.${detalleSinTelefono}\n\n📝 Ve a Personal y agrega el teléfono de cada perfil afectado.`);
+        } else {
+          let detallesExtra = '';
+          if (result.resultados?.length > 0) {
+            const errores = result.resultados.filter(r => !r.exito);
+            if (errores.length > 0) {
+              detallesExtra = '\n\n❌ Detalles:\n' + errores.map(e => `• ${e.camarero}: ${e.error}`).join('\n');
+            }
+          }
+          alert(`❌ Error al enviar: ${errorMsg}${detallesExtra}\n\n💡 Verifica la consola del navegador (F12) para más detalles.`);
+        }
       }
+    } catch (error) {
+      console.error('❌ Error al enviar:', error);
+      alert(`❌ Error de conexión al enviar el mensaje.\n\nDetalles: ${error instanceof Error ? error.message : 'Error desconocido'}\n\n💡 Abre la consola del navegador (F12) para más información.`);
     }
-
-    const resumen = `✅ Enviado a ${exitosos} camarero(s)${fallidos > 0 ? `\n⚠️ ${fallidos} fallidos:\n${errores.join('\n')}` : ''}`;
-    alert(resumen);
-
-    if (exitosos > 0) {
-      setSelectedEvento(null);
-    }
-
   };
 
   // Función para enviar mensaje al chat grupal del evento
