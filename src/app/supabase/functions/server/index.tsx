@@ -579,6 +579,7 @@ async function notificarCoordinador(coordinadorId: string, mensaje: string) {
 app.get('/confirmar/:token', async (c) => {
   try {
     const token = c.req.param('token');
+    console.log('Token created:', token);
     const confirmacionData = await kv.get(`confirmacion:${token}`);
     
     if (!confirmacionData) {

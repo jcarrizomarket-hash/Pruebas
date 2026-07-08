@@ -18,24 +18,49 @@ export function ConfirmarPage({ token, accion, baseUrl, publicAnonKey }: Confirm
         const endpoint = accion === 'confirmar' ? 'confirmar' : 'no-confirmar';
         const response = await fetch(`${baseUrl}/${endpoint}/${token}`, {
           method: 'GET',
-          headers: { Authorization: `Bearer ${publicAnonKey}` }
+          headers: {
+            Authorization: `Bearer ${publicAnonKey}`,
+            Accept: 'application/json'
+          }
         });
 
-        const data = await response.json();
+        const text = await response.text();
+        console.debug('[ConfirmarPage] status:', response.status, 'body:', text.slice(0, 300));
+
+        let data: Record<string, any> = {};
+        try {
+          data = JSON.parse(text);
+        } catch {
+          // Backend returned HTML (legacy). Treat 2xx as success.
+          if (response.ok) {
+            setEstado('exito');
+            setMensaje(accion === 'confirmar' ? 'Has confirmado tu asistencia.' : 'Has rechazado el servicio.');
+          } else {
+            setEstado('error');
+            setMensaje(`Error ${response.status}. Por favor contacta con tu coordinador.`);
+          }
+          return;
+        }
 
         if (response.ok && data.success !== false) {
           setEstado('exito');
           setMensaje(data.message || (accion === 'confirmar' ? 'Has confirmado tu asistencia.' : 'Has rechazado el servicio.'));
-        } else if (data.error?.includes('ya') || data.error?.includes('used') || data.error?.includes('Token')) {
+        } else if (
+          data.error?.toLowerCase().includes('ya') ||
+          data.error?.includes('used') ||
+          data.error?.includes('Token') ||
+          data.error?.includes('válido')
+        ) {
           setEstado('ya-respondido');
           setMensaje('Este enlace ya fue utilizado anteriormente.');
         } else {
           setEstado('error');
-          setMensaje(data.error || 'Ha ocurrido un error. Por favor contacta con tu coordinador.');
+          setMensaje(data.error || `Error ${response.status}. Por favor contacta con tu coordinador.`);
         }
-      } catch {
+      } catch (err) {
+        console.error('[ConfirmarPage] fetch error:', err);
         setEstado('error');
-        setMensaje('No se pudo conectar con el servidor. Intenta de nuevo más tarde.');
+        setMensaje(`Error de red: ${String(err)}`);
       }
     };
 
