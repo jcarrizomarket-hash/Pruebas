@@ -579,41 +579,36 @@ async function notificarCoordinador(coordinadorId: string, mensaje: string) {
 app.get('/confirmar/:token', async (c) => {
   try {
     const token = c.req.param('token');
-    console.log('Token created:', token);
-    const confirmacionData = await kv.get(`confirmacion:${token}`);
-    
-    if (!confirmacionData) {
-      return c.html(`
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <meta charset="UTF-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>Error</title>
-          <style>
-            body { font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; background: #f5f5f5; }
-            .container { background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); text-align: center; max-width: 400px; }
-            .error { color: #dc2626; }
-          </style>
-        </head>
-        <body>
-          <div class="container">
-            <h1 class="error">❌ Error</h1>
-            <p>El enlace de confirmación no es válido o ya ha sido utilizado.</p>
-          </div>
-        </body>
-        </html>
-      `);
+    console.log('Token confirmar:', token);
+
+    const { data: confirmacionRow } = await supabase
+      .from('confirmaciones')
+      .select('*')
+      .eq('token', token)
+      .single();
+
+    if (!confirmacionRow) {
+      return c.json({ success: false, error: 'El enlace no es válido o ya fue utilizado.' }, 404);
     }
-    
-    const { pedidoId, camareroId, coordinadorId } = confirmacionData;
-    
+
+    if (confirmacionRow.estado !== 'pendiente') {
+      return c.json({ success: false, error: 'Este enlace ya fue utilizado anteriormente.' }, 409);
+    }
+
+    const pedidoId = confirmacionRow.pedido_id;
+    const coordinadorId = confirmacionRow.coordinador_id || null;
+
     // Obtener pedido desde SQL
     const pedidoSQL = await db.obtenerPedidoPorId(supabase, pedidoId);
-    
-    // Obtener camarero desde SQL
-    const camarero = await db.obtenerCamareroPorEmail(supabase, camareroId) || 
-                     await supabase.from('camareros').select('*').eq('id', camareroId).single().then(r => r.data);
+
+    // Obtener camarero desde SQL por UUID (guardado en camarero_codigo)
+    const { data: camarero } = await supabase
+      .from('camareros')
+      .select('*')
+      .eq('id', confirmacionRow.camarero_codigo)
+      .single();
+
+    const camareroId = camarero?.id;
     
     if (!pedidoSQL) {
       return c.html(`
@@ -2719,7 +2714,8 @@ if (errorAsignaciones || !asignaciones || asignaciones.length === 0) {
         await supabase.from('confirmaciones').insert({
           token,
           pedido_id: pedidoId,
-          camarero_codigo: camarero.codigo,
+          camarero_codigo: camarero.id,          // UUID directo, no camarero.codigo
+          coordinador_id: pedidoSQL.coordinador, // UUID del coordinador
           estado: 'pendiente'
         });
 
