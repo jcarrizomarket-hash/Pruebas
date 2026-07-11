@@ -597,50 +597,36 @@ app.get('/confirmar/:token', async (c) => {
 
     const pedidoId = confirmacionRow.pedido_id;
     const coordinadorId = confirmacionRow.coordinador_id || null;
+    console.log('🔍 [confirmar] confirmacionRow:', JSON.stringify(confirmacionRow));
 
     // Obtener pedido desde SQL
     const pedidoSQL = await db.obtenerPedidoPorId(supabase, pedidoId);
+    console.log('🔍 [confirmar] pedidoSQL encontrado:', !!pedidoSQL, '| pedidoId:', pedidoId);
 
     // Obtener camarero desde SQL por UUID (guardado en camarero_codigo)
-    const { data: camarero } = await supabase
+    const { data: camarero, error: camareroError } = await supabase
       .from('camareros')
       .select('*')
       .eq('id', confirmacionRow.camarero_codigo)
       .single();
+    console.log('🔍 [confirmar] camarero:', camarero ? `${camarero.nombre} ${camarero.apellido}` : null, '| error:', camareroError?.message);
 
     const camareroId = camarero?.id;
-    
+
     if (!pedidoSQL) {
-      return c.html(`
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <meta charset="UTF-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>Error</title>
-          <style>
-            body { font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; background: #f5f5f5; }
-            .container { background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); text-align: center; max-width: 400px; }
-            .error { color: #dc2626; }
-          </style>
-        </head>
-        <body>
-          <div class="container">
-            <h1 class="error">❌ Error</h1>
-            <p>El pedido no existe.</p>
-          </div>
-        </body>
-        </html>
-      `);
+      return c.json({ success: false, error: 'El pedido no existe.' }, 404);
     }
-    
-    // Cargar extras (incluye asignaciones) del KV store
-    const extras = await kv.get(`pedido_extras:${pedidoId}`) || {};
-    
-    // Combinar datos SQL + KV
+
+    // Leer asignaciones desde SQL (campo JSONB en pedidos)
+    let asignacionesRaw = pedidoSQL.asignaciones;
+    if (typeof asignacionesRaw === 'string') {
+      try { asignacionesRaw = JSON.parse(asignacionesRaw); } catch { asignacionesRaw = []; }
+    }
+    const asignacionesPrevias = Array.isArray(asignacionesRaw) ? asignacionesRaw : [];
+    console.log('🔍 [confirmar] asignaciones previas:', JSON.stringify(asignacionesPrevias));
+
     const pedido = {
       ...pedidoSQL,
-      ...extras,
       diaEvento: pedidoSQL.dia_evento,
       horaEntrada: pedidoSQL.hora_entrada,
       horaSalida: pedidoSQL.hora_salida,
@@ -649,15 +635,26 @@ app.get('/confirmar/:token', async (c) => {
       tipoEvento: pedidoSQL.tipo_evento,
       notas: pedidoSQL.observaciones
     };
-    
-    // Actualizar estado a confirmado
-    const asignaciones = (pedido.asignaciones || []).map(a => 
+
+    // Actualizar estado en asignaciones
+    const asignaciones = asignacionesPrevias.map((a: any) =>
       a.camareroId === camareroId ? { ...a, estado: 'confirmado', eliminacionProgramada: null } : a
     );
-    
-    // Guardar asignaciones actualizadas
-    extras.asignaciones = asignaciones;
-    await kv.set(`pedido_extras:${pedidoId}`, extras);
+    console.log('🔍 [confirmar] asignaciones actualizadas:', JSON.stringify(asignaciones));
+
+    // Guardar asignaciones actualizadas en SQL
+    const { error: updateAsigError } = await supabase
+      .from('pedidos')
+      .update({ asignaciones })
+      .eq('id', pedidoId);
+    console.log('🔍 [confirmar] update asignaciones en pedidos:', updateAsigError ? `ERROR: ${updateAsigError.message}` : 'OK');
+
+    // Marcar confirmacion como confirmada en SQL
+    const { error: updateConfError } = await supabase
+      .from('confirmaciones')
+      .update({ estado: 'confirmado', fecha_confirmacion: new Date().toISOString() })
+      .eq('token', token);
+    console.log('🔍 [confirmar] update confirmaciones estado:', updateConfError ? `ERROR: ${updateConfError.message}` : 'OK');
     
     console.log(`✅ CONFIRMACIÓN: Camarero ${camarero?.nombre} ${camarero?.apellido} confirmó asistencia al evento "${pedido.cliente}"`);
     console.log(`   Estado actualizado: confirmado`);
@@ -735,195 +732,95 @@ app.get('/confirmar/:token', async (c) => {
     }
     
     await notificarCoordinador(coordinadorId, mensajeCoordinador);
-    
-    // Eliminar token usado
-    await kv.del(`confirmacion:${token}`);
-    
-    return c.html(`
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Confirmación Exitosa</title>
-        <style>
-          body { font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; background: #f5f5f5; }
-          .container { background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); text-align: center; max-width: 400px; }
-          .success { color: #16a34a; font-size: 3rem; }
-          h1 { color: #16a34a; margin: 1rem 0; }
-          p { color: #666; line-height: 1.6; }
-        </style>
-      </head>
-      <body>
-        <div class="container">
-          <div class="success">✓</div>
-          <h1>¡Confirmado!</h1>
-          <p>Has confirmado tu asistencia al evento exitosamente.</p>
-          <p>El coordinador ha sido notificado de tu confirmación.</p>
-          <p>Gracias por tu confirmación.</p>
-        </div>
-      </body>
-      </html>
-    `);
+
+    return c.json({ success: true, message: 'Has confirmado tu asistencia.' });
   } catch (error) {
-    console.log('Error al confirmar asistencia:', error);
-    return c.html(`
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Error</title>
-        <style>
-          body { font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; background: #f5f5f5; }
-          .container { background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); text-align: center; max-width: 400px; }
-          .error { color: #dc2626; }
-        </style>
-      </head>
-      <body>
-        <div class="container">
-          <h1 class="error">❌ Error</h1>
-          <p>Ha ocurrido un error al procesar tu confirmación.</p>
-        </div>
-      </body>
-      </html>
-    `);
+    console.log('❌ [confirmar] Error:', error);
+    return c.json({ success: false, error: `Error interno: ${String(error)}` }, 500);
   }
 });
 
 app.get('/no-confirmar/:token', async (c) => {
   try {
     const token = c.req.param('token');
-    const confirmacionData = await kv.get(`confirmacion:${token}`);
-    
-    if (!confirmacionData) {
-      return c.html(`
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <meta charset="UTF-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>Error</title>
-          <style>
-            body { font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; background: #f5f5f5; }
-            .container { background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); text-align: center; max-width: 400px; }
-            .error { color: #dc2626; }
-          </style>
-        </head>
-        <body>
-          <div class="container">
-            <h1 class="error">❌ Error</h1>
-            <p>El enlace no es válido o ya ha sido utilizado.</p>
-          </div>
-        </body>
-        </html>
-      `);
+    console.log('🔍 [no-confirmar] token:', token);
+
+    const { data: confirmacionRow } = await supabase
+      .from('confirmaciones')
+      .select('*')
+      .eq('token', token)
+      .single();
+    console.log('🔍 [no-confirmar] confirmacionRow:', JSON.stringify(confirmacionRow));
+
+    if (!confirmacionRow) {
+      return c.json({ success: false, error: 'El enlace no es válido o ya fue utilizado.' }, 404);
     }
-    
-    const { pedidoId, camareroId, coordinadorId } = confirmacionData;
-    
-    // Obtener pedido desde SQL
+
+    if (confirmacionRow.estado !== 'pendiente') {
+      return c.json({ success: false, error: 'Este enlace ya fue utilizado anteriormente.' }, 409);
+    }
+
+    const pedidoId = confirmacionRow.pedido_id;
+    const coordinadorId = confirmacionRow.coordinador_id || null;
+
     const pedidoSQL = await db.obtenerPedidoPorId(supabase, pedidoId);
-    
-    // Obtener camarero desde SQL
-    const camarero = await db.obtenerCamareroPorEmail(supabase, camareroId) || 
-                     await supabase.from('camareros').select('*').eq('id', camareroId).single().then(r => r.data);
-    
+    console.log('🔍 [no-confirmar] pedidoSQL encontrado:', !!pedidoSQL);
+
+    const { data: camarero } = await supabase
+      .from('camareros')
+      .select('*')
+      .eq('id', confirmacionRow.camarero_codigo)
+      .single();
+    console.log('🔍 [no-confirmar] camarero:', camarero ? `${camarero.nombre} ${camarero.apellido}` : null);
+
+    const camareroId = camarero?.id;
+
     if (pedidoSQL) {
-      // Cargar extras (incluye asignaciones) del KV store
-      const extras = await kv.get(`pedido_extras:${pedidoId}`) || {};
-      
-      // Combinar datos SQL + KV
+      let asignacionesRaw = pedidoSQL.asignaciones;
+      if (typeof asignacionesRaw === 'string') {
+        try { asignacionesRaw = JSON.parse(asignacionesRaw); } catch { asignacionesRaw = []; }
+      }
+      const asignacionesPrevias = Array.isArray(asignacionesRaw) ? asignacionesRaw : [];
+
       const pedido = {
         ...pedidoSQL,
-        ...extras,
         diaEvento: pedidoSQL.dia_evento,
         horaEntrada: pedidoSQL.hora_entrada,
         horaSalida: pedidoSQL.hora_salida
       };
-      
-      // CAMBIO: En lugar de eliminar inmediatamente, marcar como rechazado con eliminación programada en 5 horas
-      const asignaciones = (pedido.asignaciones || []).map(a => 
-        a.camareroId === camareroId ? { 
-          ...a, 
+
+      const asignaciones = asignacionesPrevias.map((a: any) =>
+        a.camareroId === camareroId ? {
+          ...a,
           estado: 'rechazado',
-          eliminacionProgramada: new Date(Date.now() + 5 * 60 * 60 * 1000).toISOString() // 5 horas
+          eliminacionProgramada: new Date(Date.now() + 5 * 60 * 60 * 1000).toISOString()
         } : a
       );
-      
-      // Guardar asignaciones actualizadas
-      extras.asignaciones = asignaciones;
-      await kv.set(`pedido_extras:${pedidoId}`, extras);
-      
-      console.log(`❌ RECHAZO: Camarero ${camarero?.nombre} ${camarero?.apellido} rechazó el evento "${pedido.cliente}"`);
-      console.log(`   Estado actualizado: rechazado`);
-      console.log(`   Eliminación programada: ${new Date(Date.now() + 5 * 60 * 60 * 1000).toISOString()}`);
-      
-      // Notificar al coordinador
+
+      const { error: updateAsigError } = await supabase
+        .from('pedidos')
+        .update({ asignaciones })
+        .eq('id', pedidoId);
+      console.log('🔍 [no-confirmar] update asignaciones:', updateAsigError ? `ERROR: ${updateAsigError.message}` : 'OK');
+
       const nombreCamarero = camarero ? `${camarero.nombre} ${camarero.apellido}` : 'Camarero';
-      const fechaEvento = new Date(pedido.diaEvento).toLocaleDateString('es-ES', { 
-        weekday: 'long', 
-        day: 'numeric', 
-        month: 'long' 
+      const fechaEvento = new Date(pedido.diaEvento).toLocaleDateString('es-ES', {
+        weekday: 'long', day: 'numeric', month: 'long'
       });
-      const mensajeCoordinador = `❌ RECHAZO DE SERVICIO\n\n${nombreCamarero} ha indicado que NO puede asistir.\n\nEvento: ${pedido.cliente}\nFecha: ${fechaEvento}\nLugar: ${pedido.lugar}\nHora: ${pedido.horaEntrada}\n\n⚠️ Será eliminado automáticamente en 5 horas.\n\n💡 ACCIÓN REQUERIDA: Asignar un camarero de reemplazo.`;
-      
+      const mensajeCoordinador = `❌ RECHAZO DE SERVICIO\n\n${nombreCamarero} ha indicado que NO puede asistir.\n\nEvento: ${pedido.cliente}\nFecha: ${fechaEvento}\nLugar: ${pedido.lugar}\nHora: ${pedido.horaEntrada}\n\n💡 ACCIÓN REQUERIDA: Asignar un camarero de reemplazo.`;
       await notificarCoordinador(coordinadorId, mensajeCoordinador);
     }
-    
-    // Eliminar token usado
-    await kv.del(`confirmacion:${token}`);
-    
-    return c.html(`
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>No Confirmado</title>
-        <style>
-          body { font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; background: #f5f5f5; }
-          .container { background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); text-align: center; max-width: 400px; }
-          .info { color: #ea580c; font-size: 3rem; }
-          h1 { color: #ea580c; margin: 1rem 0; }
-          p { color: #666; line-height: 1.6; }
-        </style>
-      </head>
-      <body>
-        <div class="container">
-          <div class="info">✗</div>
-          <h1>No Confirmado</h1>
-          <p>Has indicado que no podr��s asistir al evento.</p>
-          <p>Serás eliminado automáticamente en 5 horas si no se toma acción.</p>
-          <p>El coordinador ha sido notificado para buscar un reemplazo.</p>
-          <p>Gracias por tu respuesta.</p>
-        </div>
-      </body>
-      </html>
-    `);
+
+    const { error: updateConfError } = await supabase
+      .from('confirmaciones')
+      .update({ estado: 'rechazado', fecha_confirmacion: new Date().toISOString() })
+      .eq('token', token);
+    console.log('🔍 [no-confirmar] update confirmaciones estado:', updateConfError ? `ERROR: ${updateConfError.message}` : 'OK');
+
+    return c.json({ success: true, message: 'Has rechazado el servicio.' });
   } catch (error) {
-    console.log('Error al procesar no confirmación:', error);
-    return c.html(`
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Error</title>
-        <style>
-          body { font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; background: #f5f5f5; }
-          .container { background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); text-align: center; max-width: 400px; }
-          .error { color: #dc2626; }
-        </style>
-      </head>
-      <body>
-        <div class="container">
-          <h1 class="error">❌ Error</h1>
-          <p>Ha ocurrido un error al procesar tu respuesta.</p>
-        </div>
-      </body>
-      </html>
-    `);
+    console.log('❌ [no-confirmar] Error:', error);
+    return c.json({ success: false, error: `Error interno: ${String(error)}` }, 500);
   }
 });
 
