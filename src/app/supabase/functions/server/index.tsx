@@ -2532,16 +2532,18 @@ app.post('/enviar-mensaje-grupal', async (c) => {
       return c.json({ success: false, error: 'Pedido no encontrado' });
     }
     
-// Obtener asignaciones con datos del camarero desde SQL
-const { data: asignaciones, error: errorAsignaciones } = await supabase
-  .from('asignaciones')
-  .select('*, camareros!inner(id, nombre, apellido, telefono)')
-  .eq('pedido_id', pedidoId);
+    // Leer asignaciones desde el campo JSONB de pedidos
+    let asignacionesRaw = pedidoSQL.asignaciones;
+    if (typeof asignacionesRaw === 'string') {
+      try { asignacionesRaw = JSON.parse(asignacionesRaw); } catch { asignacionesRaw = []; }
+    }
+    const asignaciones = Array.isArray(asignacionesRaw) ? asignacionesRaw : [];
+    console.log('📋 Asignaciones encontradas:', asignaciones.length, JSON.stringify(asignaciones));
 
-if (errorAsignaciones || !asignaciones || asignaciones.length === 0) {
-  console.log('❌ No hay camareros asignados al pedido');
-  return c.json({ success: false, error: 'No hay camareros asignados' });
-}
+    if (asignaciones.length === 0) {
+      console.log('❌ No hay camareros asignados al pedido');
+      return c.json({ success: false, error: 'No hay camareros asignados' });
+    }
     
     const twilioAccountSid = Deno.env.get('TWILIO_ACCOUNT_SID');
     const twilioAuthToken = Deno.env.get('TWILIO_AUTH_TOKEN');
