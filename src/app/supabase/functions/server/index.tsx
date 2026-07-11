@@ -576,6 +576,20 @@ async function notificarCoordinador(coordinadorId: string, mensaje: string) {
   }
 }
 
+app.get('/confirmaciones-pedido/:pedidoId', async (c) => {
+  try {
+    const pedidoId = c.req.param('pedidoId');
+    const { data, error } = await supabase
+      .from('confirmaciones')
+      .select('camarero_codigo, estado, fecha_confirmacion')
+      .eq('pedido_id', pedidoId);
+    if (error) return c.json({ success: false, error: error.message }, 500);
+    return c.json({ success: true, data: data || [] });
+  } catch (error) {
+    return c.json({ success: false, error: String(error) }, 500);
+  }
+});
+
 app.get('/confirmar/:token', async (c) => {
   try {
     const token = c.req.param('token');

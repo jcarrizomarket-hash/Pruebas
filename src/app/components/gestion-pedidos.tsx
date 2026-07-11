@@ -34,6 +34,26 @@ export function GestionPedidos({ pedidos, setPedidos, camareros, baseUrl, public
   const [camareroParaAgregar, setCamareroParaAgregar] = useState(null);
   const [turnoSeleccionado, setTurnoSeleccionado] = useState(1);
 
+  // Confirmaciones del pedido seleccionado (fuente de verdad para estado)
+  // Mapa de camarero_codigo (UUID) → estado
+  const [confirmaciones, setConfirmaciones] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    if (!selectedPedido?.id) { setConfirmaciones({}); return; }
+    fetch(`${baseUrl}/confirmaciones-pedido/${selectedPedido.id}`, {
+      headers: { Authorization: `Bearer ${publicAnonKey}` }
+    })
+      .then(r => r.json())
+      .then(data => {
+        if (data.success && Array.isArray(data.data)) {
+          const mapa: Record<string, string> = {};
+          data.data.forEach((c: any) => { mapa[c.camarero_codigo] = c.estado; });
+          setConfirmaciones(mapa);
+        }
+      })
+      .catch(() => {});
+  }, [selectedPedido?.id]);
+
   // Deduplicar datos
   const uniquePedidos = useMemo(() => Array.from(new Map(pedidos.map(p => [p.id, p])).values()), [pedidos]);
   const uniqueCamareros = useMemo(() => Array.from(new Map(camareros.map(c => [c.id, c])).values()), [camareros]);
@@ -1225,13 +1245,15 @@ export function GestionPedidos({ pedidos, setPedidos, camareros, baseUrl, public
               </div>
             ) : (
               <div className="space-y-3">
-                {selectedPedido.asignaciones.map((asignacion, idxAsig) => (
+                {selectedPedido.asignaciones.map((asignacion, idxAsig) => {
+                  const estadoReal = confirmaciones[asignacion.camareroId] || asignacion.estado || '';
+                  return (
                   <div
                     key={`${asignacion.camareroId}-${idxAsig}`}
                     className={`p-4 rounded-lg flex items-center justify-between border-l-4 shadow-sm transition-all ${
-                      asignacion.estado === 'confirmado' ? 'bg-green-50 border-green-500 border-t border-r border-b border-gray-100' :
-                      asignacion.estado === 'enviado' ? 'bg-orange-50 border-orange-500 border-t border-r border-b border-gray-100' :
-                      asignacion.estado === 'rechazado' ? 'bg-red-50 border-red-500 border-t border-r border-b border-red-100' :
+                      estadoReal === 'confirmado' ? 'bg-green-50 border-green-500 border-t border-r border-b border-gray-100' :
+                      estadoReal === 'enviado' ? 'bg-orange-50 border-orange-500 border-t border-r border-b border-gray-100' :
+                      estadoReal === 'rechazado' ? 'bg-red-50 border-red-500 border-t border-r border-b border-red-100' :
                       'bg-white border-gray-300 border-t border-r border-b border-gray-200'
                     }`}
                   >
@@ -1248,13 +1270,13 @@ export function GestionPedidos({ pedidos, setPedidos, camareros, baseUrl, public
                          )}
                       </div>
                       <p className="text-xs text-gray-500 mt-1">
-                        Estado: {asignacion.estado ? asignacion.estado.toUpperCase() : 'PENDIENTE'}
+                        Estado: {estadoReal ? estadoReal.toUpperCase() : 'PENDIENTE'}
                         {asignacion.turno && (
                           <span className="ml-2">
                             • {asignacion.horaEntrada} - {asignacion.horaSalida}
                           </span>
                         )}
-                        {asignacion.estado === 'rechazado' && asignacion.eliminacionProgramada && (
+                        {estadoReal === 'rechazado' && asignacion.eliminacionProgramada && (
                           <span className="ml-2 text-red-600 font-bold">
                             (Se eliminará en {Math.ceil((new Date(asignacion.eliminacionProgramada) - new Date()) / (1000 * 60))} min)
                           </span>
@@ -1286,7 +1308,8 @@ export function GestionPedidos({ pedidos, setPedidos, camareros, baseUrl, public
                       </button>
                     </div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
