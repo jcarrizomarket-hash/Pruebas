@@ -36,7 +36,7 @@ export function QRControl({ pedido, baseUrl, publicAnonKey, onClose }: QRControl
       const pedidoId = pedido.id.includes(':') ? pedido.id.split(':')[1] : pedido.id;
       console.log('📋 ID extraído:', pedidoId);
 
-      const url = `${baseUrl}/pedidos/${pedidoId}/qr-token`;
+      const url = `${baseUrl}/pedidos/${pedidoId}/qr-token?appUrl=${encodeURIComponent(window.location.origin)}`;
       console.log('🔗 URL completa:', url);
 
       const response = await fetch(url, {
@@ -82,7 +82,7 @@ export function QRControl({ pedido, baseUrl, publicAnonKey, onClose }: QRControl
       // Extraer solo la parte numérica del ID si tiene el prefijo "pedido:"
       const pedidoId = pedido.id.includes(':') ? pedido.id.split(':')[1] : pedido.id;
       
-      const response = await fetch(`${baseUrl}/pedidos/${pedidoId}/qr-regenerate`, {
+      const response = await fetch(`${baseUrl}/pedidos/${pedidoId}/qr-regenerate?appUrl=${encodeURIComponent(window.location.origin)}`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${publicAnonKey}` }
       });

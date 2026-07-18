@@ -747,6 +747,44 @@ app.get('/confirmar/:token', async (c) => {
     
     await notificarCoordinador(coordinadorId, mensajeCoordinador);
 
+    // Enviar QR al camarero por WhatsApp
+    if (camarero?.telefono) {
+      try {
+        const twilioAccountSid = Deno.env.get('TWILIO_ACCOUNT_SID');
+        const twilioAuthToken = Deno.env.get('TWILIO_AUTH_TOKEN');
+        const twilioFrom = Deno.env.get('TWILIO_WHATSAPP_FROM');
+        const appUrl = Deno.env.get('APP_URL') || '';
+
+        if (twilioAccountSid && twilioAuthToken && twilioFrom && appUrl) {
+          const qrToken = await db.obtenerOCrearQRTokenPorPedido(supabase, pedidoId);
+          const qrScanUrl = `${appUrl}/qr-scan/${qrToken.token}`;
+          const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qrScanUrl)}`;
+
+          let numeroLimpio = camarero.telefono.replace(/\D/g, '');
+          if (numeroLimpio.length === 9) numeroLimpio = '34' + numeroLimpio;
+
+          const twilioBody = new URLSearchParams({
+            From: twilioFrom,
+            To: `whatsapp:+${numeroLimpio}`,
+            Body: `✅ ¡Asistencia confirmada!\n\nEscanea este QR el día del evento para registrar tu entrada.\n\nTambién puedes acceder desde: ${qrScanUrl}`,
+            MediaUrl: qrImageUrl
+          });
+
+          await fetch(`https://api.twilio.com/2010-04-01/Accounts/${twilioAccountSid}/Messages.json`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Basic ${btoa(`${twilioAccountSid}:${twilioAuthToken}`)}`,
+              'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: twilioBody.toString()
+          });
+          console.log(`📱 QR enviado por WhatsApp a ${camarero.nombre} ${camarero.apellido}`);
+        }
+      } catch (qrError) {
+        console.log('⚠️ Error enviando QR por WhatsApp (no crítico):', String(qrError));
+      }
+    }
+
     return c.json({ success: true, message: 'Has confirmado tu asistencia.' });
   } catch (error) {
     console.log('❌ [confirmar] Error:', error);
@@ -3060,12 +3098,11 @@ app.get('/pedidos/:id/qr-token', async (c) => {
     const qrToken = await db.obtenerOCrearQRTokenPorPedido(supabase, pedidoId);
     console.log('✅ Token QR obtenido:', qrToken.token);
     
-    // Generar URL apuntando al frontend de la aplicación
-    const frontendUrl = c.req.url.replace('/functions/v1/make-server-ce05fe95/pedidos/', '/qr-scan/').replace(`/${pedidoId}/qr-token`, '');
-    const qrUrl = `${frontendUrl}${qrToken.token}`;
-    
-    return c.json({ 
-      success: true, 
+    const appUrl = c.req.query('appUrl') || Deno.env.get('APP_URL') || '';
+    const qrUrl = `${appUrl}/qr-scan/${qrToken.token}`;
+
+    return c.json({
+      success: true,
       token: qrToken.token,
       url: qrUrl
     });
@@ -3116,12 +3153,11 @@ app.post('/pedidos/:id/qr-regenerate', requireSecret, async (c) => {
     const qrToken = await db.regenerarQRToken(supabase, pedidoId);
     console.log('✅ Token regenerado:', qrToken.token);
     
-    // Generar URL apuntando al frontend de la aplicación
-    const frontendUrl = c.req.url.replace('/functions/v1/make-server-ce05fe95/pedidos/', '/qr-scan/').replace(`/${pedidoId}/qr-regenerate`, '');
-    const qrUrl = `${frontendUrl}${qrToken.token}`;
-    
-    return c.json({ 
-      success: true, 
+    const appUrl = c.req.query('appUrl') || Deno.env.get('APP_URL') || '';
+    const qrUrl = `${appUrl}/qr-scan/${qrToken.token}`;
+
+    return c.json({
+      success: true,
       token: qrToken.token,
       url: qrUrl
     });
