@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Settings, MessageSquare, TestTube, Mail, TestTube2, Trash2, Bot, Database, Key, Bell } from 'lucide-react';
-import { WhatsAppConfig } from './whatsapp-config';
 import { TestPanel } from './test-panel';
 import { TestEmail } from './test-email';
 import { WhatsAppTest } from './whatsapp-test';
@@ -19,10 +18,9 @@ interface ConfiguracionProps {
 }
 
 export function Configuracion({ baseUrl, publicAnonKey, camareros = [], coordinadores = [], pedidos = [], clientes = [] }: ConfiguracionProps) {
-  const [activeSubTab, setActiveSubTab] = useState<'whatsapp' | 'chatbot' | 'whatsapp-test' | 'twilio-test' | 'test-panel' | 'test-email' | 'passwords' | 'notificaciones' | 'alertas' | 'utilidades'>('whatsapp');
+  const [activeSubTab, setActiveSubTab] = useState<'chatbot' | 'whatsapp-test' | 'twilio-test' | 'test-panel' | 'test-email' | 'passwords' | 'notificaciones' | 'alertas' | 'utilidades'>('chatbot');
 
   const subTabs = [
-    { id: 'whatsapp' as const, label: 'WhatsApp', icon: MessageSquare },
     { id: 'chatbot' as const, label: '🤖 Chatbot', icon: Bot },
     { id: 'notificaciones' as const, label: 'Notificaciones', icon: Bell },
     { id: 'alertas' as const, label: '🔔 Alertas de Servicio', icon: Bell },
@@ -195,10 +193,6 @@ export function Configuracion({ baseUrl, publicAnonKey, camareros = [], coordina
 
         {/* Content */}
         <div className="p-6">
-          {activeSubTab === 'whatsapp' && (
-            <WhatsAppConfig baseUrl={baseUrl} publicAnonKey={publicAnonKey} />
-          )}
-          
           {activeSubTab === 'chatbot' && (
             <WhatsAppChatbotConfig baseUrl={baseUrl} publicAnonKey={publicAnonKey} />
           )}
